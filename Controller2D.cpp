@@ -2,14 +2,15 @@
  * 
  */
 
-#include "Controller2D.h"
 #include<math.h>
 #include<vector>
 #include<tuple>
 #include<iostream>
 #include<ostream>
 #include<limits>
+#include "Controller2D.h"
 using namespace std;
+using namespace ctr;
 
 const double GAIN_P = 1.0;  //Proportional error gain
 const double GAIN_D = 0.0;  //Derivative error gain

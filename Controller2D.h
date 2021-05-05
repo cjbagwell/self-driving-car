@@ -7,53 +7,62 @@
 #include<ostream>
 #include<vector>
 #include<tuple>
-using namespace std;
+// #include<boost/python.hpp>
+namespace ctr{
 
-/*
-code design
-class Controller2D
-*/
+    using namespace std;
+
+    /*
+    code design
+    class Controller2D
+    */
 
 
 
-struct Waypoint{
-    double x;
-    double y;
-    double v;
-} typedef Waypoint;
+    struct Waypoint{
+        double x;
+        double y;
+        double v;
+    } typedef Waypoint;
 
-struct State{
-    double x;
-    double y;
-    double yaw;
-    double speed;
-    double time;
-    int frame; //TODO: not sure about the type of 'frame'
-} typedef State;
+    class State{
+    public:
+        State():x(0), y(0), yaw(0), speed(0), time(-1), frame(-1){};
+        
+        State(double x, double y, double yaw, double speed, double time, int frame):
+             x(x), y(y), yaw(yaw), speed(speed), time(time), frame(frame){};
+        double x;
+        double y;
+        double yaw;
+        double speed;
+        double time;
+        int frame; //TODO: not sure about the type of 'frame'
+    };
 
-struct Commands{
-    double app;
-    double bpp;
-    double steerAngleRate;
-} typedef Commands;
+    struct Commands{
+        double app;
+        double bpp;
+        double steerAngleRate;
+    } typedef Commands;
 
-class Controller2D{
-public:
-    Controller2D(vector<Waypoint> ws):waypoints(ws){}
-    virtual ~Controller2D();
-    void updateState(State &egoState){
-        this->prevState = this->currState; 
-        this->currState = egoState;
-    }
-    void updateWaypoints(vector<Waypoint> &newWaypoints){this->waypoints = newWaypoints;}
-    void updateDesiredSpeed();
-    
-    Commands getCommands(){return this->currCommands;};
-    bool updateCommands();
+    class Controller2D{
+    public:
+        Controller2D(vector<Waypoint> ws):waypoints(ws){}
+        virtual ~Controller2D();
+        void updateState(State &egoState){
+            this->prevState = this->currState; 
+            this->currState = egoState;
+        }
+        void updateWaypoints(vector<Waypoint> &newWaypoints){this->waypoints = newWaypoints;}
+        void updateDesiredSpeed();
+        
+        Commands getCommands(){return this->currCommands;};
+        bool updateCommands();
 
-private:
-    State currState, prevState;
-    Commands currCommands;
-    vector<Waypoint> waypoints;
-    double vDesired, vDesiredPrev, vErrorPrev, vErrorInt; 
-};
+    private:
+        State currState, prevState;
+        Commands currCommands;
+        vector<Waypoint> waypoints;
+        double vDesired, vDesiredPrev, vErrorPrev, vErrorInt; 
+    };
+}
