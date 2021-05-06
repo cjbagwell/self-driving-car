@@ -8,16 +8,12 @@
 #include<vector>
 #include<tuple>
 // #include<boost/python.hpp>
+#ifndef CONTROLLER_2D_H
+#define CONTROLLER_2D_H
+
 namespace ctr{
 
     using namespace std;
-
-    /*
-    code design
-    class Controller2D
-    */
-
-
 
     struct Waypoint{
         double x;
@@ -66,3 +62,5 @@ namespace ctr{
         double vDesired, vDesiredPrev, vErrorPrev, vErrorInt; 
     };
 }
+
+#endif
