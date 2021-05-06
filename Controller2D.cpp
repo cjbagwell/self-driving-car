@@ -19,6 +19,7 @@ const double GAIN_CTE = 1; // crossTrack error gain
 const double VELOCITY_SOFTENING = 0.2;
 const double PI = 3.14159;
 
+/**Returns the Euclidean norm distance of the two args*/
 inline double normDistance(pair<double, double> first, pair<double,double> second){
     double dx = first.first - second.first;
     double dy = first.second - second.second;
@@ -29,6 +30,7 @@ void printCommands(Commands c){
     cout << "current commands: APP=" << c.app << "\tBPP=" << c.bpp << "\tangleRate=" << c.steerAngleRate << endl;
 }
 
+/**Wraps input to -PI/2 -> +PI/2 */
 double wrap2pi(double angle){
     if(angle > PI/2){
         angle -= PI; 
@@ -43,7 +45,9 @@ Controller2D::~Controller2D(){
 
 }
 
-// TODO: implement this
+/**Updates this->currCommands for the current member variables
+ * returns true if update was successful
+*/
 bool Controller2D::updateCommands(){
     // calculate APP and BPP Requirements
     double dt = currState.time - prevState.time;
@@ -77,6 +81,7 @@ bool Controller2D::updateCommands(){
     return true;
 }
 
+/**updates this->desiredSpeed by setting the desired speed to the closest waypoint*/
 void Controller2D::updateDesiredSpeed(){
     double minDist = numeric_limits<double>::max();
     this->vDesiredPrev = this->vDesired;
