@@ -9,8 +9,8 @@
 #include<list>
 #include<iostream>
 #include<ostream>
-#include "Controller2D.h"
-// #include<armadillo>
+#include "../controller/Controller2D.h"
+#include<armadillo>
 
 #ifndef LOCALIZATION_H
 #define LOCALIZATION_H
@@ -19,13 +19,10 @@ namespace lcl{
     using namespace std;
     using namespace ctr;
 
-    //TODO: temporary class that will be replaced with an armadillo matrix
-    class Matrix{};
-
     class NonlinearKF{
     private:
         State *currState, *prevState;
-        Matrix *K, *pCurr;
+        arma::mat *K, *pCurr;
 
     public:
         /**
@@ -48,7 +45,7 @@ namespace lcl{
          *      TODO: add format for sensor variance
          * @returns the state of the vehicle after considering the new measurement
          */
-        virtual State updateState(const Matrix &newImu, Matrix sensorVar);
+        virtual State updateState(const arma::Row<double> &newImu, const arma::Row<double> &sensorVar);
         
         /**
          * updates the state of the vehicle based on a new measurement from the
@@ -58,7 +55,7 @@ namespace lcl{
          *      TODO: add format for IMU measurement
          * @returns the state of the vehicle after considering the new measurement
          */
-        virtual State updateState(const State &measurement, Matrix sensorVar);
+        virtual State updateState(const State &measurement, const arma::Row<double> &sensorVar);
     };
 
     class EsEKF:NonlinearKF{
