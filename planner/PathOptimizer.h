@@ -9,17 +9,17 @@
 #include<iostream>
 #include<ostream>
 
-#include "Controller2D.h"
+#include "../controller/Controller2D.h"
 #include "LocalPlanner.h"
 
-using namespace std;
-using namespace ctr;
-using namespace lpnr;
+
 
 #ifndef PATH_OPTIMIZER_H
 #define PATH_OPTIMIZER_H
 namespace pOp{
-    
+    using namespace std;
+    using namespace ctr;
+    using namespace lpnr;
     
     class PathOptimizer{
     private:

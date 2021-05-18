@@ -11,7 +11,9 @@
 #include<list>
 #include<algorithm>
 #include<armadillo>
-// TODO: add opencv (maybe opencv2)
+#include<opencv2/highgui.hpp>
+#include<opencv2/dnn.hpp>
+#include<opencv2/imgproc.hpp>
 #include "../controller/Controller2D.h"
 #include "../localization/Localization.h"
 
@@ -22,11 +24,12 @@ namespace vis{
     using namespace std;
     using namespace ctr;
     using namespace arma;
+    using namespace cv;
 
     class VisualOdometer{
     private:
-        
-        arma::Mat<double> *k; 
+        double matchThreshold;
+        arma::Mat<double> k; 
     public:
         /**
          * Constructor for Visual Odometer 
@@ -34,7 +37,7 @@ namespace vis{
          * @param matchThreshold the maximum allowable relative distance between matched features
          *  across images.
          */
-        VisualOdometer(arma::Mat<double> k, double matchThreshold);
+        VisualOdometer(arma::Mat<double> k, double matchThreshold):k(k), matchThreshold(matchThreshold){}
 
         /**
          * Finds the current state of the vehicle based on motion estimated through feature matching.
@@ -43,11 +46,56 @@ namespace vis{
          *  returned state.
          * @param previousState the state of the vehicle at the time previousImage was taken.
          * @returns the current state of the vehicle.  This will be the state of the vehicle at the moment currentImage was taken.
-         * TODO: need to updated the types of previousImage and currentImage to be opencv images once the lib is up and working
          */
-        State getCurrentState(arma::Mat<int> previousImage, arma::Mat<int> currentImage, const State &previousState);
+        State getCurrentState(cv::Mat previousImage, cv::Mat currentImage, const State &previousState);
+
+    };
+
+    class ObjectDetector{
+    private:
+        double confidenceThreshold;
+    public:
+        /**
+         * Object Detector for self driving car.
+         * TODO: need to add more info
+         */
+        ObjectDetector(double confidenceThreshold);
+
+        /**
+         * finds all objects in the image
+         * @param image the image to detect objects in 
+         * @returns all object detections found in the image. 
+         * TODO: add more info about return type (bboxes, class, confidence)
+         */
+        vector<cv::Rect> getBboxes(const cv::Mat &image);
+
+        /**
+         * Creates a visualization for the found BBoxes in an image.  This is used with the output of 
+         * 'getBboxes' and simply draws the boxes on the image.
+         * @param image the image containing the objects
+         * @param bboxes the bounding boxes for each object in the image
+         */
+        void visualizeBboxes(const cv::Mat &image, const vector<cv::Rect> bboxes);
+    };
+
+    class SemanticSegmenter{
+    private:
+    public:
+        /**
+         * Semantic Segmentation object for Self-Driving Car
+         * TODO: update params to match requirements
+         */
+        SemanticSegmenter();
+
+        /**
+         * Returns the semantic segmentation model output of the input image.  The classes of the 
+         * segmenter are TODO: add info about classes/add enum class for classes?
+         * @param image the input image to perform segmentation on
+         * @returns the outpout of the semantic segmentation network
+         */
+        cv::Mat getSegmentation(const cv::Mat &image);
+
     };
 }
-
 
 #endif

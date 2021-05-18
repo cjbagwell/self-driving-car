@@ -4,10 +4,13 @@
  * Description: TODO: some stuff here
  */
 
+#ifndef COLLISION_CHECKER_H
+#define COLLISION_CHECKER_H
+
 #include<iostream>
 #include<ostream>
 #include<vector>
-#include "Controller2D.h"
+#include "../controller/Controller2D.h"
 
 using namespace std;
 using namespace ctr;
@@ -36,3 +39,5 @@ public:
                             const vector<bool> &collisionCheckVec,
                             const State &goalState);
 };
+
+#endif

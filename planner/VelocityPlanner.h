@@ -6,7 +6,7 @@
 
 #include<vector>
 #include<iostream>
-#include "Controller2D.h"
+#include "../controller/Controller2D.h"
 
 #ifndef VELOCITY_PLANNER_H
 #define VELOCITY_PLANNER_H

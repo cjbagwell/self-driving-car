@@ -7,7 +7,7 @@
 #include<iostream>
 #include<ostream>
 #include<vector>
-#include "Controller2D.h"
+#include "../controller/Controller2D.h"
 #include<algorithm>
 
 #ifndef BEHAVIOURAL_PLANNER_H
