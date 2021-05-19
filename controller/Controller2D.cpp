@@ -45,6 +45,11 @@ Controller2D::~Controller2D(){
 
 }
 
+void Controller2D::updateState(const State &egoState){
+    this->prevState = this->currState;
+    this->currState = egoState;
+}
+
 /**Updates this->currCommands for the current member variables
  * returns true if update was successful
 */
@@ -81,7 +86,6 @@ bool Controller2D::updateCommands(){
     return true;
 }
 
-/**updates this->desiredSpeed by setting the desired speed to the closest waypoint*/
 void Controller2D::updateDesiredSpeed(){
     double minDist = numeric_limits<double>::max();
     this->vDesiredPrev = this->vDesired;
