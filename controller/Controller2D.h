@@ -7,14 +7,14 @@
 #include<ostream>
 #include<vector>
 #include<tuple>
-// #include<boost/python.hpp>
+#include<pybind11/pybind11.h>
 #ifndef CONTROLLER_2D_H
 #define CONTROLLER_2D_H
 
 namespace ctr{
 
     using namespace std;
-    // using namespace boost::python;
+    namespace py = pybind11;
 
     /**
      * @brief Waypoints for a 2D Controller to track to.
@@ -151,5 +151,10 @@ namespace ctr{
          */
         bool updateCommands();    
     };
+    
+    PYBIND11_MODULE(controller, handle){
+        
+    }
+
 }
 #endif
