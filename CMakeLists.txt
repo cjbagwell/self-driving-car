@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.4)
-project(pybind11_test)
-add_subdirectory(pybind11)
-pybind11_add_module(module_name main.cpp)
+project(self-driving-car)
+add_subdirectory(libs/pybind11)
+add_subdirectory(src)

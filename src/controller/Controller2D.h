@@ -18,19 +18,18 @@ namespace ctr{
 
     /**
      * @brief Waypoints for a 2D Controller to track to.
-     * 
-     * @param x The x location of the waypoint in the Navigation Frame.
-     * @param y The y location of the waypoint in the Navigation Frame.
-     * @param v The velocity to track at this waypoint in the Navigation Frame. TODO: in the Navigation Frame? is this necesary? is it innacurate?
      */
-    struct Waypoint{
+    class Waypoint{
+    public:
         /** @brief The x location of the waypoint in the Navigation Frame.*/
         double x;
         /** @brief The y location of the waypoint in the Navigation Frame.*/
         double y;
         /** @brief The velocity to track at this waypoint in the Navigation Frame. TODO: in the Navigation Frame? is this necesary? is it innacurate?*/
         double v;
-    } typedef Waypoint;
+        Waypoint():x(0), y(0), v(0) {};
+        Waypoint(double x, double y, double v):x(x), y(y), v(v){};
+    };
 
     /**
      * @brief A State of a vehicle to be used for a self-driving car.
@@ -152,9 +151,6 @@ namespace ctr{
         bool updateCommands();    
     };
     
-    PYBIND11_MODULE(controller, handle){
-        
-    }
 
 }
 #endif

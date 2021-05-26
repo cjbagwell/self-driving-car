@@ -1,0 +1,2 @@
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+pybind11_add_module(controller controller/Controller2D.cpp)

@@ -9,6 +9,7 @@
 #include<ostream>
 #include<limits>
 #include "Controller2D.h"
+#include<pybind11/pybind11.h>
 using namespace std;
 using namespace ctr;
 
@@ -96,6 +97,11 @@ void Controller2D::updateDesiredSpeed(){
             this->vDesired = w.v;
         }
     }
+}
+
+PYBIND11_MODULE(controller, handle){
+        py::class_<Waypoint>(handle, "Waypoint")
+            .def(py::init<double, double, double>());
 }
 
 int main(){
