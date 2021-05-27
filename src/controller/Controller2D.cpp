@@ -99,9 +99,13 @@ void Controller2D::updateDesiredSpeed(){
     }
 }
 
-PYBIND11_MODULE(controller, handle){
+PYBIND11_MODULE(py_controller, handle){
         py::class_<Waypoint>(handle, "Waypoint")
-            .def(py::init<double, double, double>());
+            .def(py::init<double, double, double>())
+            .def("get_x", &Waypoint::getX)
+            .def("get_y", &Waypoint::getY)
+            .def("get_v", &Waypoint::getV)
+            ;
 }
 
 int main(){

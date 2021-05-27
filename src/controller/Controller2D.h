@@ -29,6 +29,10 @@ namespace ctr{
         double v;
         Waypoint():x(0), y(0), v(0) {};
         Waypoint(double x, double y, double v):x(x), y(y), v(v){};
+        double getX(){return this->x;}
+        double getY(){return this->y;}
+        double getV(){return this->v;}
+
     };
 
     /**
