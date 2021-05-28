@@ -40,3 +40,14 @@ build/src/CMakeFiles/controller.dir/controller/Controller2D.cpp.o
 pythonClient/__pycache__/carla_util.cpython-37.pyc
 pythonClient/automatic_control.py
 pythonClient/synchronous_mode.py
+build/.cmake/api/v1/reply/codemodel-v2-6cbf8ae1200ae9ab507b.json
+build/.cmake/api/v1/reply/codemodel-v2-c63be912daae6cb26de9.json
+build/.cmake/api/v1/reply/index-2021-05-27T21-36-14-0523.json
+build/.cmake/api/v1/reply/index-2021-05-28T02-27-40-0763.json
+build/.cmake/api/v1/reply/target-py_controller-846c2279c7f6a953add4.json
+build/.cmake/api/v1/reply/target-py_controller-ac13b4e97e4b334cf91e.json
+build/src/py_controller.cpython-38-x86_64-linux-gnu.so
+build/src/CMakeFiles/py_controller.dir/build.make
+build/src/CMakeFiles/py_controller.dir/CXX.includecache
+build/src/CMakeFiles/py_controller.dir/link.txt
+build/src/CMakeFiles/py_controller.dir/controller/Controller2D.cpp.o

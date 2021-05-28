@@ -7,14 +7,14 @@
 #include<ostream>
 #include<vector>
 #include<tuple>
-#include<pybind11/pybind11.h>
+// #include<pybind11/pybind11.h>
 #ifndef CONTROLLER_2D_H
 #define CONTROLLER_2D_H
 
 namespace ctr{
 
     using namespace std;
-    namespace py = pybind11;
+    // namespace py = pybind11;
 
     /**
      * @brief Waypoints for a 2D Controller to track to.

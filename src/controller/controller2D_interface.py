@@ -12,7 +12,7 @@ except IndexError:
     print("error")
     pass
 
-from controller import Waypoint
+from py_controller import Waypoint
 
 my_waypoint = Waypoint(1.1, 2.2, 3.3)
 print(my_waypoint)
