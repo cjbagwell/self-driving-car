@@ -13,3 +13,5 @@ target_link_libraries(
     py_controller
     PRIVATE pybind11::embed
 )
+
+include_directories(/usr/include/python3.8)
