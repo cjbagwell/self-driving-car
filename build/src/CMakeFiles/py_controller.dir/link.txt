@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC  -flto -shared  -o py_controller.cpython-38-x86_64-linux-gnu.so CMakeFiles/py_controller.dir/controller/Controller2D.cpp.o 
