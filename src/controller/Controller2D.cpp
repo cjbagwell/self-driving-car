@@ -52,9 +52,7 @@ void Controller2D::updateState(const State &egoState){
     this->currState = egoState;
 }
 
-/**Updates this->currCommands for the current member variables
- * returns true if update was successful
-*/
+
 bool Controller2D::updateCommands(){
     // calculate APP and BPP Requirements
     double dt = currState.time - prevState.time;

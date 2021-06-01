@@ -7,14 +7,12 @@
 #include<ostream>
 #include<vector>
 #include<tuple>
-// #include<pybind11/pybind11.h>
 #ifndef CONTROLLER_2D_H
 #define CONTROLLER_2D_H
 
 namespace ctr{
 
     using namespace std;
-    // namespace py = pybind11;
 
     /**
      * @brief Waypoints for a 2D Controller to track to.
@@ -98,7 +96,7 @@ namespace ctr{
         double vDesired, vDesiredPrev, vErrorPrev, vErrorInt; 
     public:
         /**
-         * @brief Construct a new Controller 2 D object
+         * @brief Construct a new Controller 2D object
          * 
          * @param ws the initial waypoints for the controller to track to.  See
          * ctr::Waypoint for more information.
