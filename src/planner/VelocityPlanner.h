@@ -1,26 +1,35 @@
-/**Velocity Planner for the Local Planner
- * Author:  C. Jordan Bagwell
- * Date:    5/6/2021
- * Description: TODO: some stuff here
+/**
+ * @file VelocityPlanner.h
+ * @author C. Jordan Bagwell (cjbagwell@crimson.ua.edu)
+ * @brief TODO: some stuff here
+ * @version 0.1
+ * @date 2021-05-06
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
+// std lib includes
 #include<vector>
 #include<iostream>
-#include "../controller/Controller2D.h"
+
+// project lib includes
+#include "Waypoint.h"
 
 #ifndef VELOCITY_PLANNER_H
 #define VELOCITY_PLANNER_H
 
 using namespace std;
-using namespace ctr;
 
 class VelocityPlanner{
 private:
-double timeGap, aMax, vSlow, stopLineBuffer;
-vector<Waypoint> prevTrajectory;
+    double timeGap, aMax, vSlow, stopLineBuffer;
+    vector<Waypoint> prevTrajectory;
 
 public:
-    /**Constructor for the Velocity Planner
+    /**
+     * @brief TODO: some stuff here
+     * 
      * @param timeGap The amount of time to maintain between the ego and lead Vehicle.
      *              The time gap is defined as the amount of time for the ego vehicle to 
      *              reach the state of the lead Vehicle. [s]

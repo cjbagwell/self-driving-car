@@ -1,19 +1,27 @@
-/**Collision Checker
- * Author:  C. Jordan Bagwell
- * Date:    5/5/2021
- * Description: TODO: some stuff here
+/**
+ * @file CollisionChecker.h
+ * @author C. Jordan Bagwell (cjbagwell@crimson.ua.edu)
+ * @brief TODO: some stuff here
+ * @version 0.1
+ * @date 2021-05-05
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
 #ifndef COLLISION_CHECKER_H
 #define COLLISION_CHECKER_H
 
+// std lib includes
 #include<iostream>
 #include<ostream>
 #include<vector>
-#include "../controller/Controller2D.h"
+
+// project lib includes
+#include "Waypoint.h"
+#include "../localization/State.h"
 
 using namespace std;
-using namespace ctr;
 
 class CollisionChecker{
 private:

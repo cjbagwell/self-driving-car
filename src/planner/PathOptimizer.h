@@ -1,25 +1,28 @@
 /**
- * Path Optimizer for the Local Planner
- * Author:  C. Jordan Bagwell
- * Date:    5/6/2021
- * Description: TODO: some stuff here
+ * @file PathOptimizer.h
+ * @author C. Jordan Bagwell (cjbagwell@crimson.ua.edu)
+ * @brief TODO: some stuff here
+ * @version 0.1
+ * @date 2021-05-06
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
+// std lib includes
 #include<vector>
 #include<iostream>
 #include<ostream>
 
-#include "../controller/Controller2D.h"
-#include "LocalPlanner.h"
-
-
+// project lib includes
+#include "../localization/Location.h"
 
 #ifndef PATH_OPTIMIZER_H
 #define PATH_OPTIMIZER_H
+
+
 namespace pOp{
     using namespace std;
-    using namespace ctr;
-    using namespace lpnr;
     
     class PathOptimizer{
     private:

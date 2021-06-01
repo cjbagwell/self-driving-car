@@ -1,28 +1,34 @@
 /**
- * Vision System for Self Driving Car
- * Author:  C. Jordan Bagwell
- * Date:    5/11/2021
- * Description: TODO: some stuff here
+ * @file Vision.h
+ * @author C. Jordan Bagwell (cjbagwell@crimson.ua.edu)
+ * @brief TODO: some stuff here
+ * @version 0.1
+ * @date 2021-05-11
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
+// std lib includes
 #include<iostream>
 #include<ostream>
 #include<vector>
 #include<list>
 #include<algorithm>
 #include<armadillo>
-#include<opencv2/highgui.hpp>
-#include<opencv2/dnn.hpp>
-#include<opencv2/imgproc.hpp>
-#include "../controller/Controller2D.h"
-#include "../localization/Localization.h"
+
+// project lib includes
+/** TODO: need to add opencv as a submodule */
+// #include<opencv2/highgui.hpp>
+// #include<opencv2/dnn.hpp>
+// #include<opencv2/imgproc.hpp>
+#include "../localization/State.h"
 
 #ifndef VISION_H
 #define VISION_H
 
 namespace vis{
     using namespace std;
-    using namespace ctr;
     using namespace arma;
     using namespace cv;
 

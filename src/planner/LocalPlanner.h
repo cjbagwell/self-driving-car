@@ -1,80 +1,32 @@
-/**Local Planner for Self Driving Car
- * Author:  C. Jordan Bagwell
- * Date:    5/5/2021
- * Description: TODO: some stuff here
+/**
+ * @file LocalPlanner.h
+ * @author C. Jordan Bagwell (cjbagwell@crimson.ua.edu)
+ * @brief TODO: some stuff here
+ * @version 0.1
+ * @date 2021-05-05
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
+// std lib includes
 #include<iostream>
 #include<ostream>
 #include<vector>
 #include<set>
-#include "../controller/Controller2D.h"
-#include "../localization/Localization.h"
+
+// project lib includes
+#include "../localization/State.h"
+#include "Waypoint.h"
 #include "CollisionChecker.h"
 #include "VelocityPlanner.h"
 
 #ifndef LOCAL_PLANNER_H
 #define LOCAL_PLANNER_H
 
+
 namespace localPlanner{
     using namespace std;
-    using namespace controller;
-    using namespace localization;
-
-    struct Location{
-            double x;
-            double y;
-            double yaw;
-    } typedef Location;
-
-    /**
-     * @brief Waypoints for a 2D Controller to track to.
-     */
-    class Waypoint{
-    private:
-        /** @brief The x location of the waypoint in the Navigation Frame.*/
-        double x;
-        /** @brief The y location of the waypoint in the Navigation Frame.*/
-        double y;
-        /** @brief The velocity to track at this waypoint in the Navigation Frame. TODO: in the Navigation Frame? is this necesary? is it innacurate?*/
-        double v;
-    public:
-        Waypoint():x(0), y(0), v(0) {};
-        Waypoint(double x, double y, double v):x(x), y(y), v(v){};
-        double getX(){return this->x;}
-        double getY(){return this->y;}
-        double getV(){return this->v;}
-    };
-
-    /**
-     * @brief Controls that can be executed by a self-driving car.
-     * 
-     * @param app The accelerator pedal position (APP) for a vehicle.  This is represented as a
-     * value between 0 and 1 where 0 represents no APP and 1 represents maximum APP.
-     * 
-     * @param bpp The brake pedal position (BPP) for a vehicle.  This is represented as a value
-     * between 0 and 1 where 0 represents no BPP and 1 represents maximum BPP.
-     * 
-     * @param steerAngleRate The rate at which the steering agle should of the vehicle should change.
-     * This is expressed in radians per second [rad/s]
-     * 
-     */
-    class Commands{
-    private:
-        double app;
-        double bpp;
-        double steerAngleRate;
-    public:
-        Commands(double app, 
-                 double bpp, 
-                 double steerAngleRate)
-                 :
-                 app(app), 
-                 bpp(bpp), 
-                 steerAngleRate(steerAngleRate) 
-                 {};
-    };
-
 
     class LocalPlanner{
     private:

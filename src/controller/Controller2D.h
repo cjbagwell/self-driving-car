@@ -1,8 +1,12 @@
 /**
- * @brief 
- * Author:  C. Jordan Bagwell
- * Date:    May 3rd, 2021
- * Description: TODO: some stuff here
+ * @file Controller2D.h
+ * @author C. Jordan Bagwell (cjbagwell@crimson.ua.edu)
+ * @brief TODO: some stuff here 
+ * @version 0.2
+ * @date 2021-05-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
 // std lib includes
@@ -12,9 +16,9 @@
 #include<tuple>
 
 // project libs includes
-#include "../localization/Localization.h"
-#include "../planner/LocalPlanner.h"
-
+#include "../localization/State.h"
+#include "../planner/Waypoint.h"
+#include "../planner/Commands.h"
 
 #ifndef CONTROLLER_2D_H
 #define CONTROLLER_2D_H
@@ -22,8 +26,6 @@
 namespace controller{
 
     using namespace std;
-    using namespace lcl;
-    using namespace lpnr;
 
     class Controller2D{
     private:
@@ -38,7 +40,7 @@ namespace controller{
          * @param ws the initial waypoints for the controller to track to.  See
          * ctr::Waypoint for more information.
          */
-        Controller2D(vector<Waypoint> ws):waypoints(ws){}
+        Controller2D(vector<Waypoint> ws):waypoints(ws){};
         
         virtual ~Controller2D();
         

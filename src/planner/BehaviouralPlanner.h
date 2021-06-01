@@ -1,20 +1,28 @@
-/**Behavioural Planner for self driving car
- * Author:  C. Jordan Bagwell
- * Date:    5/5/2021
- * Description: TODO: some stuff here;
+/**
+ * @file BehaviouralPlanner.h
+ * @author C. Jordan Bagwell (cjbagwell@crimson.ua.edu)
+ * @brief TODO: some stuff here
+ * @version 0.1
+ * @date 2021-05-05
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
+// std lib includes
 #include<iostream>
 #include<ostream>
 #include<vector>
-#include "../controller/Controller2D.h"
 #include<algorithm>
+
+// project lib includes
+#include "../localization/State.h"
+#include "Waypoint.h"
 
 #ifndef BEHAVIOURAL_PLANNER_H
 #define BEHAVIOURAL_PLANNER_H
 
 using namespace std;
-using namespace ctr;
 
 enum class Behaviour {FOLLOW_LANE, DECELERATE_TO_STOP, 
                       STAY_STOPPED, FOLLOW_LEADER};
