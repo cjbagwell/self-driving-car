@@ -1,92 +1,29 @@
-/**Self-driving Car 2D Controller
+/**
+ * @brief 
  * Author:  C. Jordan Bagwell
  * Date:    May 3rd, 2021
+ * Description: TODO: some stuff here
  */
 
+// std lib includes
 #include<iostream>
 #include<ostream>
 #include<vector>
 #include<tuple>
+
+// project libs includes
+#include "../localization/Localization.h"
+#include "../planner/LocalPlanner.h"
+
+
 #ifndef CONTROLLER_2D_H
 #define CONTROLLER_2D_H
 
-namespace ctr{
+namespace controller{
 
     using namespace std;
-
-    /**
-     * @brief Waypoints for a 2D Controller to track to.
-     */
-    class Waypoint{
-    public:
-        /** @brief The x location of the waypoint in the Navigation Frame.*/
-        double x;
-        /** @brief The y location of the waypoint in the Navigation Frame.*/
-        double y;
-        /** @brief The velocity to track at this waypoint in the Navigation Frame. TODO: in the Navigation Frame? is this necesary? is it innacurate?*/
-        double v;
-        Waypoint():x(0), y(0), v(0) {};
-        Waypoint(double x, double y, double v):x(x), y(y), v(v){};
-        double getX(){return this->x;}
-        double getY(){return this->y;}
-        double getV(){return this->v;}
-
-    };
-
-    /**
-     * @brief A State of a vehicle to be used for a self-driving car.
-     * @param x The x location of the vehicle[m].
-     * @param y The y location of the vehicle [m].
-     * @param yaw The yaw of the vehicle [rad].
-     * @param speed The speed of the vehicle [m/s].
-     * @param time The time at this state [s].
-     * @param frame TODO: uhh...idk
-     */
-    class State{
-    public:
-        /**
-         * @brief Construct a new State object with all values set to their default values.
-         */
-        State():x(0), y(0), yaw(0), speed(0), time(-1), frame(-1){};
-        
-        /**
-         * @brief Construct a new State object.
-         * 
-         * @param x The x location [m].
-         * @param y The y location [m].
-         * @param yaw The yaw of the vehicle [rad].
-         * @param speed The speed of the vehicle [m/s].
-         * @param time The time that this State is refering to [s].
-         * @param frame TODO: uhh...idk
-         */
-        State(double x, double y, double yaw, double speed, double time, int frame):
-             x(x), y(y), yaw(yaw), speed(speed), time(time), frame(frame){};
-        double x;
-        double y;
-        double yaw;
-        double speed;
-        double time;
-        int frame; /** TODO: not sure about the type of 'frame'*/
-    };
-
-    /**
-     * @brief Controls that can be executed by a self-driving car.
-     * 
-     * @param app The accelerator pedal position (APP) for a vehicle.  This is represented as a
-     * value between 0 and 1 where 0 represents no APP and 1 represents maximum APP.
-     * 
-     * @param bpp The brake pedal position (BPP) for a vehicle.  This is represented as a value
-     * between 0 and 1 where 0 represents no BPP and 1 represents maximum BPP.
-     * 
-     * @param steerAngleRate The rate at which the steering agle should of the vehicle should change.
-     * This is expressed in radians per second [rad/s]
-     * 
-     */
-    struct Commands{
-        double app;
-        double bpp;
-        double steerAngleRate;
-    } typedef Commands;
+    using namespace lcl;
+    using namespace lpnr;
 
     class Controller2D{
     private:
@@ -153,6 +90,18 @@ namespace ctr{
         bool updateCommands();    
     };
     
+    class LongitudinalController{
+    private:
+    public:
+        LongitudinalController();
+    };
+
+    class LateralController{
+    private:
+    public:
+        LateralController();
+    };
 
 }
 #endif
+
