@@ -92,16 +92,36 @@ namespace controller{
         bool updateCommands();    
     };
     
-    class LongitudinalController{
+    class LongitudinalPIDController{
     private:
+        const double kp, ki, kd;
+        vector<double> errorBuffer; /** TODO: probably change the type of erBuf */
     public:
-        LongitudinalController();
+        LongitudinalPIDController():kp(1.0), ki(0.0), kd(0.0) {};
+        LongitudinalPIDController(double kp, 
+                               double ki, 
+                               double kd)
+                               :
+                               kp(kp),
+                               ki(ki),
+                               kd(kd)
+                               {};
+        
+        double runStep(double currentSpeed, double targetSpeed); 
     };
 
-    class LateralController{
+    class LateralStanleyController{
     private:
+        double ks, kcte;
     public:
-        LateralController();
+        LateralStanleyController():ks(1.0), kcte(1.0) {};
+        LateralStanleyController(double ks, 
+                                 double kcte)
+                                 :
+                                 ks(ks),
+                                 kcte(kcte)
+                                 {};
+        double runStep(Waypoint prevWaypoint, Waypoint currWaypoint);
     };
 
 }
