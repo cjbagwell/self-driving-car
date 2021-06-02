@@ -12,10 +12,13 @@
 // std lib includes
 #include<math.h>
 #include<vector>
+#include<list>
 #include<tuple>
 #include<iostream>
 #include<ostream>
 #include<limits>
+#include<algorithm>
+#include<numeric>
 
 // project lib includes
 #include<pybind11/pybind11.h>
@@ -58,56 +61,51 @@ Controller2D::~Controller2D(){
 
 }
 
-void Controller2D::updateState(const State &egoState){
-    this->prevState = this->currState;
-    this->currState = egoState;
-}
-
-
-bool Controller2D::updateCommands(){
-    // calculate APP and BPP Requirements
-    double dt = currState.time - prevState.time;
-    updateDesiredSpeed();
-    double vError = this->vDesired - currState.speed;
-    double vErrorPrev = this->vDesiredPrev - prevState.speed;
-    double vErrorDot = (vError - vErrorPrev) / dt;
-    this->vErrorInt += dt* vError;
-    double aRequested = GAIN_P * vError + GAIN_I * vErrorInt + GAIN_D * vErrorDot;
-    double kAPP = 1, kBPP = 1;
-    if(aRequested >= 0){
-        currCommands.setBpp(0);
-        currCommands.setApp(max(100.0, kAPP * aRequested));
+Commands Controller2D::runStep(State currState, Waypoint prevWaypoint, Waypoint currWaypoint, double dt){
+    Commands newCommands;
+    double requestedAcceleration = this->lonController.runStep(currState.speed, currWaypoint.getV(), dt);
+    double requestedSteering = this->latController.runStep(currState, prevWaypoint, currWaypoint);
+    
+    newCommands.setSteeringAngleRate(requestedSteering);
+    if(requestedAcceleration > 0.0){
+        newCommands.setApp(max(requestedAcceleration, 1.0));
+        newCommands.setBpp(0);
     }
     else{
-        currCommands.setApp(0);
-        currCommands.setBpp(max(100.0, kBPP * -aRequested));
+        newCommands.setBpp(max(requestedAcceleration, -1.0));
+        newCommands.setApp(0);
     }
+    return newCommands;
+}
 
-    // Calculate Steering Requirement
-    double a = waypoints[0].getY() - waypoints[1].getY();
-    double b = waypoints[1].getX() - waypoints[0].getX();
-    double c = waypoints[0].getX()*waypoints[1].getY() - waypoints[1].getX()*waypoints[0].getY();
-    
+double LongitudinalPIDController::runStep(double currentSpeed, double targetSpeed, double dt){
+    double e = currentSpeed-targetSpeed;
+    double de = 0.0;
+    double ie = 0.0;
+    if(errorBuffer.size() >= 2){
+        de = (e - errorBuffer.front()) / dt;
+        ie = accumulate(begin(errorBuffer), end(errorBuffer), e) * dt;
+        
+    }
+    this->errorBuffer.push_front(e);
+
+    double returnVal = kp*e + kd*de + ki*ie;
+    return max(-1.0, min(returnVal, 1.0));
+}
+
+double LateralStanleyController::runStep(State currState, Waypoint prevWaypoint, Waypoint currWaypoint){
+    double a = prevWaypoint.getY() - currWaypoint.getY();
+    double b = currWaypoint.getX() - prevWaypoint.getX();
+    double c = prevWaypoint.getX()*currWaypoint.getY() - currWaypoint.getX()*prevWaypoint.getY();
+
     double yawDesired = atan2(-a, b);   // desired heading (yaw)
     double yawError = wrap2pi(yawDesired - currState.yaw); // heading error
     double cte = (a*currState.x + b*currState.y + c) / sqrt(a*a + b*b); //cross track error
-    double ctCorrection = atan2(GAIN_CTE * cte, -VELOCITY_SOFTENING + currState.speed); //TODO: not sure about the minus velocity softening
-    currCommands.setSteeringAngleRate(yawError + ctCorrection);
-    printCommands(this->currCommands);
-    return true;
+    double ctCorrection = atan2(kcte*cte, -ks + currState.speed); //TODO: not sure about the minus velocity softening
+    
+    return yawError + ctCorrection;
 }
 
-void Controller2D::updateDesiredSpeed(){
-    double minDist = numeric_limits<double>::max();
-    this->vDesiredPrev = this->vDesired;
-    for(auto w : waypoints){
-        double currDist = normDistance(make_pair(w.getX(), w.getY()), make_pair(currState.x, currState.y));
-        if(currDist < minDist){
-            minDist = currDist;
-            this->vDesired = w.getV();
-        }
-    }
-}
 
 PYBIND11_MODULE(py_controller, handle){
         py::class_<Waypoint>(handle, "Waypoint")
