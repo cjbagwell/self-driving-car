@@ -46,6 +46,8 @@ class Controller2D_interface():
 
         # generate starting commands
         self.vehicle_controller = Controller2D()
+from py_controller import Waypoint, Controller2D, Commands, State
+
 
 my_waypoint = Waypoint(1.1, 2.2, 3.3)
 print(my_waypoint)

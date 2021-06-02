@@ -22,6 +22,7 @@
 
 // project lib includes
 #include<pybind11/pybind11.h>
+#include<pybind11/stl.h>
 #include "Controller2D.h"
 
 using namespace std;
@@ -113,6 +114,20 @@ PYBIND11_MODULE(py_controller, handle){
             .def("get_x", &Waypoint::getX)
             .def("get_y", &Waypoint::getY)
             .def("get_v", &Waypoint::getV)
+            ;
+        py::class_<Commands>(handle, "Commands")
+            .def(py::init<>())
+            .def("get_app", &Commands::getApp)
+            .def("get_bpp", &Commands::getBpp)
+            .def("get_steering_angle_rate", &Commands::getSteeringAngleRate)
+            ;
+        py::class_<Controller2D>(handle, "Controller2D")
+            .def(py::init<vector<Waypoint>, Commands>())
+            .def("update_waypoints", &Controller2D::updateWaypoints)
+            .def("run_step", &Controller2D::runStep)
+            ;
+        py::class_<State>(handle, "State")
+            .def(py::init<>())
             ;
 }
 
