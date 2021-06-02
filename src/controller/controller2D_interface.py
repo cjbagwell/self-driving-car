@@ -72,7 +72,7 @@ class Controller2DInterface():
         curr_time = curr_snapshot.timestamp.platform_timestamp # TODO: not sure about this (using os time stampe)
         curr_frame = curr_snapshot.timestamp.frame
         dt = curr_snapshot.timestamp.delta_seconds
-        curr_state = State(curr_location.x, curr_location.y, curr_rotation.yaw, curr_speed, curr_time, curr_frame)
+        curr_state = State(curr_location.x, curr_location.y, curr_rotation.yaw*np.pi/180, curr_speed, curr_time, curr_frame)
 
         # build waypoints for c++ code
         prev_location = prev_waypoint.transform.location
