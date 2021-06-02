@@ -66,8 +66,8 @@ Commands Controller2D::runStep(State currState, Waypoint prevWaypoint, Waypoint 
     Commands newCommands;
     double requestedAcceleration = this->lonController.runStep(currState.speed, currWaypoint.getV(), dt);
     double requestedSteering = this->latController.runStep(currState, prevWaypoint, currWaypoint);
-    cout<< "current speed " << currState.speed << "\tcurrent targetSpeed " << currWaypoint.getV() << 
-        "\trequested Acceleration " << requestedAcceleration << endl;
+    // cout<< "current speed " << currState.speed << "\tcurrent targetSpeed " << currWaypoint.getV() << 
+    //     "\trequested Acceleration " << requestedAcceleration << endl;
 
 
     newCommands.setSteeringAngleRate(requestedSteering);
@@ -94,7 +94,7 @@ double LongitudinalPIDController::runStep(double currentSpeed, double targetSpee
     this->errorBuffer.push_front(e);
 
     double returnVal = kp*e + kd*de + ki*ie;
-    cout << "Lon Controller return Val (before max) " << returnVal << endl;
+    // cout << "Lon Controller return Val (before max) " << returnVal << endl;
     return max(-1.0, min(returnVal, 1.0));
 }
 
@@ -104,11 +104,19 @@ double LateralStanleyController::runStep(State currState, Waypoint prevWaypoint,
     double c = prevWaypoint.getX()*currWaypoint.getY() - currWaypoint.getX()*prevWaypoint.getY();
 
     double yawDesired = atan2(-a, b);   // desired heading (yaw)
-    double yawError = wrap2pi(yawDesired - currState.yaw); // heading error
+    double yawError = yawDesired - currState.yaw; // heading error
     double cte = (a*currState.x + b*currState.y + c) / sqrt(a*a + b*b); //cross track error
-    double ctCorrection = atan2(kcte*cte, -ks + currState.speed); //TODO: not sure about the minus velocity softening
+    double ctCorrection = atan2(kcte*cte, -(ks + currState.speed)); //TODO: not sure about the minus velocity softening
     
-    return yawError + ctCorrection;
+    cout << "lateralController yawDesired " << yawDesired << 
+            "\tcurrYaw " << currState.yaw << 
+            "\tcte " << cte << 
+            "\nctCorrection " << ctCorrection << 
+            "\tyaw_error " << yawError << 
+            "\tcommand " << yawError + ctCorrection << 
+            "\twrapped command " << wrap2pi(yawError + ctCorrection) <<
+            "\n" << endl;
+    return wrap2pi(yawError + ctCorrection);
 }
 
 
