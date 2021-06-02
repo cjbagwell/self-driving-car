@@ -49,7 +49,13 @@ class Controller2DInterface():
         # generate starting commands
         ini_commands = Commands(past_app, past_bpp, self.past_steering)
         print("ini_commands {}".format(ini_commands))
-        self.vehicle_controller = Controller2D(ini_commands)
+        kp = 0.7
+        ki = 0.2
+        kd = 0.5
+        ks = 0.25
+        kcte = 1.0
+
+        self.vehicle_controller = Controller2D(ini_commands, kp, ki, kd, ks, kcte)
     
     def run_step(self, target_speed, prev_waypoint, waypoint):
         """
@@ -72,13 +78,15 @@ class Controller2DInterface():
         curr_time = curr_snapshot.timestamp.platform_timestamp # TODO: not sure about this (using os time stampe)
         curr_frame = curr_snapshot.timestamp.frame
         dt = curr_snapshot.timestamp.delta_seconds
-        curr_state = State(curr_location.x, curr_location.y, curr_rotation.yaw*np.pi/180, curr_speed, curr_time, curr_frame)
+        curr_state = State(curr_location.x, curr_location.y, np.deg2rad(curr_rotation.yaw), curr_speed, curr_time, curr_frame)
 
         # build waypoints for c++ code
         prev_location = prev_waypoint.transform.location
-        prev_waypoint = Waypoint(prev_location.x, prev_location.y, -1) # TODO: currently not using speed
+        prev_rotation = prev_waypoint.transform.rotation
+        prev_waypoint = Waypoint(prev_location.x, prev_location.y, np.deg2rad(prev_rotation.yaw), -1) # TODO: currently not using speed
         curr_w_location = waypoint.transform.location
-        curr_waypoint = Waypoint(curr_w_location.x, curr_w_location.y, target_speed) 
+        curr_w_rotation = waypoint.transform.rotation
+        curr_waypoint = Waypoint(curr_w_location.x, curr_w_location.y, np.deg2rad(curr_w_rotation.yaw), target_speed) 
         
         # run step using c++ controller
         new_commands = self.vehicle_controller.run_step(curr_state, prev_waypoint, curr_waypoint, dt)

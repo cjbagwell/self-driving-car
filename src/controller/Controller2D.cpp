@@ -52,7 +52,7 @@ double wrap2pi(double angle){
     if(angle > PI/2){
         angle -= PI; 
     }
-    else if(angle < PI/2){
+    else if(angle < -PI/2){
         angle += PI;
     }
     return angle;
@@ -99,14 +99,13 @@ double LongitudinalPIDController::runStep(double currentSpeed, double targetSpee
 }
 
 double LateralStanleyController::runStep(State currState, Waypoint prevWaypoint, Waypoint currWaypoint){
-    double a = prevWaypoint.getY() - currWaypoint.getY();
-    double b = currWaypoint.getX() - prevWaypoint.getX();
-    double c = prevWaypoint.getX()*currWaypoint.getY() - currWaypoint.getX()*prevWaypoint.getY();
-
-    double yawDesired = atan2(-a, b);   // desired heading (yaw)
-    double yawError = yawDesired - currState.yaw; // heading error
+    double a = tan(currWaypoint.getYaw());
+    double b = -1;
+    double c = currWaypoint.getY() - a * currWaypoint.getX();
+    double yawDesired = wrap2pi(currWaypoint.getYaw());   // desired heading (yaw)
+    double yawError = wrap2pi(yawDesired - currState.yaw); // heading error
     double cte = (a*currState.x + b*currState.y + c) / sqrt(a*a + b*b); //cross track error
-    double ctCorrection = atan2(kcte*cte, -(ks + currState.speed)); //TODO: not sure about the minus velocity softening
+    double ctCorrection = -atan2(kcte*cte, ks + currState.speed); //TODO: not sure about the minus velocity softening
     
     cout << "lateralController yawDesired " << yawDesired << 
             "\tcurrYaw " << currState.yaw << 
@@ -116,16 +115,17 @@ double LateralStanleyController::runStep(State currState, Waypoint prevWaypoint,
             "\tcommand " << yawError + ctCorrection << 
             "\twrapped command " << wrap2pi(yawError + ctCorrection) <<
             "\n" << endl;
-    return wrap2pi(yawError + ctCorrection);
+    return (yawError + ctCorrection)/PI/2;
 }
 
 
 PYBIND11_MODULE(py_controller, handle){
         py::class_<Waypoint>(handle, "Waypoint")
-            .def(py::init<double, double, double>())
+            .def(py::init<double, double, double, double>())
             .def("get_x", &Waypoint::getX)
             .def("get_y", &Waypoint::getY)
             .def("get_v", &Waypoint::getV)
+            .def("get_yaw", &Waypoint::getYaw)
             ;
         py::class_<Commands>(handle, "Commands")
             .def(py::init<>())
@@ -136,7 +136,7 @@ PYBIND11_MODULE(py_controller, handle){
             ;
         py::class_<Controller2D>(handle, "Controller2D")
             .def(py::init<vector<Waypoint>, Commands>())
-            .def(py::init<Commands>())
+            .def(py::init<Commands, double, double, double, double, double>())
             .def("update_waypoints", &Controller2D::updateWaypoints)
             .def("run_step", &Controller2D::runStep)
             ;

@@ -64,7 +64,7 @@ from agents.navigation.roaming_agent import RoamingAgent  # pylint: disable=impo
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
-
+from agents.tools.misc import draw_waypoints
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -768,7 +768,7 @@ class TestLocalPlanner(LocalPlanner):
         # fill waypoint trajectory queue
         self._compute_next_waypoints(k=200)
 
-    def run_step(self, debug=False):
+    def run_step(self, debug=True):
         """
         Execute one step of local planning which involves running the longitudinal and lateral PID controllers to
         follow the waypoints trajectory.
@@ -1016,7 +1016,7 @@ def game_loop(args):
                 world.tick(clock)
                 world.render(display)
                 pygame.display.flip()
-                control = agent.run_step()
+                control = agent.run_step(debug=True)
                 control.manual_gear_shift = False
                 world.player.apply_control(control)
             else:

@@ -33,7 +33,7 @@ namespace controller{
         const double kp, ki, kd;
         list<double> errorBuffer; /** TODO: probably change the type of erBuf */
     public:
-        LongitudinalPIDController():kp(1.0), ki(0.0), kd(0.0) {};
+        LongitudinalPIDController():kp(1.0), ki(0.2), kd(0.5) {};
         LongitudinalPIDController(double kp, 
                                double ki, 
                                double kd)
@@ -50,7 +50,7 @@ namespace controller{
     private:
         double ks, kcte;
     public:
-        LateralStanleyController():ks(1.0), kcte(1.0) {};
+        LateralStanleyController():ks(0.1), kcte(1.0) {};
         LateralStanleyController(double ks, 
                                  double kcte)
                                  :
@@ -83,7 +83,16 @@ namespace controller{
          *  TODO: update docs
          * @param iniCommands 
          */
-        Controller2D(Commands iniCommands):prevCommands(iniCommands){};
+        Controller2D(Commands iniCommands, 
+                     double kp=0.7, 
+                     double ki=0.2, 
+                     double kd=0.5, 
+                     double ks=0.1, 
+                     double kcte=1.0)
+                     :
+                     prevCommands(iniCommands),
+                     lonController(kp, ki, kd),
+                     latController(ks, kcte){};
 
         virtual ~Controller2D();
 
