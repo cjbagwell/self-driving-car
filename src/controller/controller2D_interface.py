@@ -80,7 +80,6 @@ class Controller2DInterface():
         curr_w_location = waypoint.transform.location
         curr_waypoint = Waypoint(curr_w_location.x, curr_w_location.y, target_speed) 
         
-        print("controller2D_interface.py is about to run step using C++ Controller2D")
         # run step using c++ controller
         new_commands = self.vehicle_controller.run_step(curr_state, prev_waypoint, curr_waypoint, dt)
         

@@ -66,7 +66,10 @@ Commands Controller2D::runStep(State currState, Waypoint prevWaypoint, Waypoint 
     Commands newCommands;
     double requestedAcceleration = this->lonController.runStep(currState.speed, currWaypoint.getV(), dt);
     double requestedSteering = this->latController.runStep(currState, prevWaypoint, currWaypoint);
-    
+    cout<< "current speed " << currState.speed << "\tcurrent targetSpeed " << currWaypoint.getV() << 
+        "\trequested Acceleration " << requestedAcceleration << endl;
+
+
     newCommands.setSteeringAngleRate(requestedSteering);
     if(requestedAcceleration > 0.0){
         newCommands.setApp(max(requestedAcceleration, 1.0));
@@ -80,7 +83,7 @@ Commands Controller2D::runStep(State currState, Waypoint prevWaypoint, Waypoint 
 }
 
 double LongitudinalPIDController::runStep(double currentSpeed, double targetSpeed, double dt){
-    double e = currentSpeed-targetSpeed;
+    double e = targetSpeed - currentSpeed;
     double de = 0.0;
     double ie = 0.0;
     if(errorBuffer.size() >= 2){
@@ -91,6 +94,7 @@ double LongitudinalPIDController::runStep(double currentSpeed, double targetSpee
     this->errorBuffer.push_front(e);
 
     double returnVal = kp*e + kd*de + ki*ie;
+    cout << "Lon Controller return Val (before max) " << returnVal << endl;
     return max(-1.0, min(returnVal, 1.0));
 }
 

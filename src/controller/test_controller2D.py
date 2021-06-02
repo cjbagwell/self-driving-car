@@ -808,7 +808,7 @@ class TestLocalPlanner(LocalPlanner):
         self.target_waypoint, self._target_road_option = self._waypoint_buffer[0]
         # move using PID controllers
         # TODO: actual implementation of the controller here. NOTE not sure about the previous distance
-        print("just before run_step")
+        print("just before run_step: target_speed; {}".format(self._target_speed))
         control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint.previous(1)[-1], self.target_waypoint)
 
         # purge the queue of obsolete waypoints
