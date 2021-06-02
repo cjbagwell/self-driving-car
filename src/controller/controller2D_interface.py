@@ -2,6 +2,7 @@ import glob
 import sys
 import argparse
 import os
+import numpy as np
 
 # import controller module
 try:
@@ -43,10 +44,44 @@ class Controller2D_interface():
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
         self.past_steering = self._vehicle.get_control().steer
+        past_app = self._vehicle.get_control().throttle
+        past_bpp = self._vehicle.get_control().brake
 
         # generate starting commands
-        self.vehicle_controller = Controller2D()
-from py_controller import Waypoint, Controller2D, Commands, State
+        ini_commands = Commands(past_app, past_bpp, self.past_steering)
+        self.vehicle_controller = Controller2D(ini_commands)
+    
+    def run_step(self, target_speed, prev_waypoint, waypoint):
+        """
+        Execute one step of control invoking both lateral and longitudinal
+        PID controllers to reach a target waypoint
+        at a given target_speed.
+
+            :param target_speed: desired vehicle speed
+            :param waypoint: target location encoded as a waypoint
+            :return: distance (in meters) to the waypoint
+        """
+        # build state for c++ code
+        curr_transform = self._vehicle.get_transform()
+        curr_location = curr_transform.location
+        curr_rotation = curr_transform.rotation
+        curr_velocity = self._vehicle.get_velocity
+        curr_speed = np.sqrt(np.square(curr_velocity.x) + np.square(curr_velocity.y))
+        curr_snapshot = self._world.get_snapshot()
+        curr_time = curr_snapshot.timestamp.platform_timestamp # TODO: not sure about this (using os time stampe)
+        curr_frame = curr_snapshot.timestamp.frame
+        dt = curr_snapshot.timestamp.delta_seconds
+        curr_state = State(curr_location.x, curr_location.y, curr_rotation.yaw, curr_speed, curr_time, curr_frame)
+
+        # build waypoints for c++ code
+        prev_location = prev_waypoint.transfrom.location
+        prev_waypoint = Waypoint(prev_location.x, prev_location.y, -1) # TODO: currently not using speed
+        curr_w_location = waypoint.transform.location
+        curr_waypoint = Waypoint(curr_w_location.x, curr_w_location.y, target_speed) 
+        
+        # run step using c++ controller
+        new_commands = self.vehicle_controller.run_step(curr_state, prev_waypoint, curr_waypoint, dt)
+        return new_commands
 
 
 my_waypoint = Waypoint(1.1, 2.2, 3.3)
