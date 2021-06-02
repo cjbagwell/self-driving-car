@@ -78,6 +78,13 @@ namespace controller{
          */
         Controller2D(vector<Waypoint> ws, Commands iniCommands):waypoints(ws), prevCommands(iniCommands){};
         
+        /**
+         * @brief Construct a new Controller 2 D object
+         *  TODO: update docs
+         * @param iniCommands 
+         */
+        Controller2D(Commands iniCommands):prevCommands(iniCommands){};
+
         virtual ~Controller2D();
 
         /**
