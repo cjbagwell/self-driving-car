@@ -7,8 +7,9 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
  
 """Example of automatic vehicle control from client side."""
-# from __future__ import print_function
+from __future__ import print_function
 from carla_util import *
+from controller2D_interface import Controller2DInterface
 import argparse
 import collections
 import datetime
@@ -38,10 +39,8 @@ except ImportError:
 # ==============================================================================
 # -- Find CARLA module ---------------------------------------------------------
 # ==============================================================================
-print("test")
 try:
     sys.path.append(glob.glob('/opt/carla-simulator/PythonAPI/carla/dist/carla-0.9.11-py3.7-linux-x86_64.egg')[0])
-    print("successfully found Carla module")
 except IndexError:
     print("error finding Carla module")
     pass
@@ -51,7 +50,6 @@ except IndexError:
 # ==============================================================================
 try:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath('/opt/carla-simulator/PythonAPI'))) + '/carla')
-    print("successful addition of PythonAPI for release mode")
 except IndexError:
     print("error wild adding PythonAPI for release mode")
     pass
@@ -60,15 +58,17 @@ import carla
 from carla import ColorConverter as cc
 
 from agents.navigation.agent import Agent, AgentState
+from agents.navigation.local_planner import LocalPlanner, RoadOption
 from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
 from agents.navigation.roaming_agent import RoamingAgent  # pylint: disable=import-error
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
+from agents.navigation.global_route_planner import GlobalRoutePlanner
+from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
-print("made it here")
 
 def find_weather_presets():
     """Method to find weather presets"""
@@ -668,7 +668,7 @@ class CameraManager(object):
 # ==============================================================================
 
 
-class TestLocalPlanner(object):
+class TestLocalPlanner(LocalPlanner):
     """
     TestLocalPlanner implements the basic behavior of following a trajectory of waypoints that is generated on-the-fly.
     The low-level motion of the vehicle is computed by using two PID controllers, one is used for the lateral control
@@ -698,36 +698,8 @@ class TestLocalPlanner(object):
             longitudinal_control_dict -- dictionary of arguments to setup the longitudinal PID controller
                                         {'K_P':, 'K_D':, 'K_I':, 'dt'}
         """
-        self._vehicle = vehicle
-        self._map = self._vehicle.get_world().get_map()
-
-        self._dt = None
-        self._target_speed = None
-        self._sampling_radius = None
-        self._min_distance = None
-        self._current_waypoint = None
-        self._target_road_option = None
-        self._next_waypoints = None
-        self.target_waypoint = None
-        self._vehicle_controller = None
-        self._global_plan = None
-        # queue with tuples of (waypoint, RoadOption)
-        self._waypoints_queue = deque(maxlen=20000)
-        self._buffer_size = 5
-        self._waypoint_buffer = deque(maxlen=self._buffer_size)
-
-        # initializing controller
-        self._init_controller(opt_dict)
-
-    def __del__(self):
-        if self._vehicle:
-            self._vehicle.destroy()
-            print("Destroying ego-vehicle!")
-
-    def reset_vehicle(self):
-        self._vehicle = None
-        print("Resetting ego-vehicle!")
-
+        super(TestLocalPlanner, self).__init__(vehicle, opt_dict=opt_dict)
+        
     def _init_controller(self, opt_dict):
         """
         Controller initialization.
@@ -737,7 +709,7 @@ class TestLocalPlanner(object):
         """
         # default params
         self._dt = 1.0 / 20.0
-        self._target_speed = 20.0  # Km/h
+        self._target_speed = 50.0  # Km/h
         self._sampling_radius = self._target_speed * 1 / 3.6  # 1 seconds horizon
         self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
         self._max_brake = 0.3
@@ -779,8 +751,7 @@ class TestLocalPlanner(object):
 
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         
-        # TODO: update the initialization of this controller with a python interface for cpp controller2D
-        self._vehicle_controller = VehiclePIDController(self._vehicle,
+        self._vehicle_controller = Controller2DInterface(self._vehicle,
                                                         args_lateral=args_lateral_dict,
                                                         args_longitudinal=args_longitudinal_dict,
                                                         offset=self._offset,
@@ -796,72 +767,6 @@ class TestLocalPlanner(object):
         self._target_road_option = RoadOption.LANEFOLLOW
         # fill waypoint trajectory queue
         self._compute_next_waypoints(k=200)
-
-    def set_speed(self, speed):
-        """
-        Request new target speed.
-
-        :param speed: new target speed in Km/h
-        :return:
-        """
-        self._target_speed = speed
-
-    def _compute_next_waypoints(self, k=1):
-        """
-        Add new waypoints to the trajectory queue.
-
-        :param k: how many waypoints to compute
-        :return:
-        """
-        # check we do not overflow the queue
-        available_entries = self._waypoints_queue.maxlen - len(self._waypoints_queue)
-        k = min(available_entries, k)
-
-        for _ in range(k):
-            last_waypoint = self._waypoints_queue[-1][0]
-            next_waypoints = list(last_waypoint.next(self._sampling_radius))
-
-            if len(next_waypoints) == 0:
-                break
-            elif len(next_waypoints) == 1:
-                # only one option available ==> lanefollowing
-                next_waypoint = next_waypoints[0]
-                road_option = RoadOption.LANEFOLLOW
-            else:
-                # random choice between the possible options
-                road_options_list = _retrieve_options(
-                    next_waypoints, last_waypoint)
-                road_option = random.choice(road_options_list)
-                next_waypoint = next_waypoints[road_options_list.index(
-                    road_option)]
-
-            self._waypoints_queue.append((next_waypoint, road_option))
-
-    def set_global_plan(self, current_plan):
-        """
-        Resets the waypoint queue and buffer to match the new plan. Also
-        sets the global_plan flag to avoid creating more waypoints
-
-        :param current_plan: list of (carla.Waypoint, RoadOption)
-        :return:
-        """
-
-        # Reset the queue
-        self._waypoints_queue.clear()
-        for elem in current_plan:
-            self._waypoints_queue.append(elem)
-        self._target_road_option = RoadOption.LANEFOLLOW
-
-        # and the buffer
-        self._waypoint_buffer.clear()
-        for _ in range(self._buffer_size):
-            if self._waypoints_queue:
-                self._waypoint_buffer.append(
-                    self._waypoints_queue.popleft())
-            else:
-                break
-
-        self._global_plan = True
 
     def run_step(self, debug=False):
         """
@@ -902,8 +807,9 @@ class TestLocalPlanner(object):
         # target waypoint
         self.target_waypoint, self._target_road_option = self._waypoint_buffer[0]
         # move using PID controllers
-        # TODO: actual implementation of the controller here
-        control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint)
+        # TODO: actual implementation of the controller here. NOTE not sure about the previous distance
+        print("just before run_step")
+        control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint.previous(1)[-1], self.target_waypoint)
 
         # purge the queue of obsolete waypoints
         max_index = -1
@@ -920,14 +826,6 @@ class TestLocalPlanner(object):
 
         return control
 
-    def done(self):
-        """
-        Returns whether or not the planner has finished
-
-        :return: boolean
-        """
-        return len(self._waypoints_queue) == 0 and len(self._waypoint_buffer) == 0
-
 # ==============================================================================
 # -- TestAgent ---------------------------------------------------------
 # ==============================================================================
@@ -941,7 +839,7 @@ class TestAgent(Agent):
     This agent respects traffic lights and other vehicles.
     """
 
-    def __init__(self, vehicle):
+    def __init__(self, vehicle, target_speed=20):
         """
 
         :param vehicle: actor to apply to local planner logic onto
@@ -949,7 +847,47 @@ class TestAgent(Agent):
         super(TestAgent, self).__init__(vehicle)
         self._proximity_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
-        self._local_planner = TestLocalPlanner(self._vehicle)
+        self._local_planner = TestLocalPlanner(
+            self._vehicle, opt_dict={'target_speed' : target_speed})        
+        self._hop_resolution = 2.0
+        self._path_seperation_hop = 2
+        self._path_seperation_threshold = 0.5
+        self._target_speed = target_speed
+        self._grp = None
+
+    def set_destination(self, location):
+        """
+        This method creates a list of waypoints from agent's position to destination location
+        based on the route returned by the global router
+        """
+
+        start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
+        end_waypoint = self._map.get_waypoint(
+            carla.Location(location[0], location[1], location[2]))
+
+        route_trace = self._trace_route(start_waypoint, end_waypoint)
+
+        self._local_planner.set_global_plan(route_trace)
+
+    def _trace_route(self, start_waypoint, end_waypoint):
+        """
+        This method sets up a global router and returns the optimal route
+        from start_waypoint to end_waypoint
+        """
+
+        # Setting up global router
+        if self._grp is None:
+            dao = GlobalRoutePlannerDAO(self._vehicle.get_world().get_map(), self._hop_resolution)
+            grp = GlobalRoutePlanner(dao)
+            grp.setup()
+            self._grp = grp
+
+        # Obtain route plan
+        route = self._grp.trace_route(
+            start_waypoint.transform.location,
+            end_waypoint.transform.location)
+
+        return route
 
     def run_step(self, debug=False):
         """
@@ -989,9 +927,17 @@ class TestAgent(Agent):
         else:
             self._state = AgentState.NAVIGATING
             # standard local planner behavior
-            control = self._local_planner.run_step()
+            control = self._local_planner.run_step(debug=debug)
 
         return control
+
+    def done(self):
+        """
+        Check whether the agent has reached its destination.
+        :return bool
+        """
+        return self._local_planner.done()
+
 
 # ==============================================================================
 # -- Game Loop ---------------------------------------------------------
@@ -1021,14 +967,24 @@ def game_loop(args):
         controller = KeyboardControl(world)
 
         if args.agent == "Roaming":
+            print("Selecting Roaming Agent")
             agent = RoamingAgent(world.player)
         elif args.agent == "Basic":
+            print("Selecting Basic Agent")
             agent = BasicAgent(world.player)
             spawn_point = world.map.get_spawn_points()[0]
             agent.set_destination((spawn_point.location.x,
                                    spawn_point.location.y,
                                    spawn_point.location.z))
+        elif args.agent == "Test":
+            print("Selecting Test Agent")
+            agent = TestAgent(world.player)
+            spawn_point = world.map.get_spawn_points()[0]
+            agent.set_destination((spawn_point.location.x,
+                                   spawn_point.location.y,
+                                   spawn_point.location.z))
         else:
+            print("Selecting BehaviourAgent")
             agent = BehaviorAgent(world.player, behavior=args.behavior)
 
             spawn_points = world.map.get_spawn_points()
@@ -1052,7 +1008,7 @@ def game_loop(args):
             if not world.world.wait_for_tick(10.0):
                 continue
 
-            if args.agent == "Roaming" or args.agent == "Basic":
+            if args.agent == "Roaming" or args.agent == "Basic" or args.agent == "Test":
                 if controller.parse_events():
                     return
 
@@ -1148,9 +1104,9 @@ def main():
     #     help='Choose one of the possible agent behaviors (default: normal) ',
     #     default='normal')
     argparser.add_argument("-a", "--agent", type=str,
-                           choices=["Behavior", "Roaming", "Basic"],
+                           choices=["Behavior", "Roaming", "Basic", "Test"],
                            help="select which agent to run",
-                           default="Basic")
+                           default="Test")
     argparser.add_argument(
         '-s', '--seed',
         help='Set seed for repeating executions (default: None)',

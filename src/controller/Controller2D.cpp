@@ -130,6 +130,7 @@ PYBIND11_MODULE(py_controller, handle){
             ;
         py::class_<State>(handle, "State")
             .def(py::init<>())
+            .def(py::init<double,double,double,double,double,int>())
             ;
 }
 

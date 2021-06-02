@@ -7,16 +7,15 @@ import numpy as np
 # import controller module
 try:
     sys.path.append(glob.glob('/opt/carla-simulator/PythonAPI/carla/dist/carla-0.9.11-py3.7-linux-x86_64.egg')[0])    
-    print("successfully found Carla module")
 except IndexError:
-    print("error finding Carla module")
+    print("error finding Carla module in controller2D_interface.py")
     pass
 
 import carla
 
 from py_controller import Waypoint, Controller2D, Commands, State
 
-class Controller2D_interface():
+class Controller2DInterface():
     def __init__(self, vehicle, args_lateral, args_longitudinal, offset=0, max_throttle=0.75, max_brake=0.3,
                  max_steering=0.8):
         """
@@ -49,6 +48,7 @@ class Controller2D_interface():
 
         # generate starting commands
         ini_commands = Commands(past_app, past_bpp, self.past_steering)
+        print("ini_commands {}".format(ini_commands))
         self.vehicle_controller = Controller2D(ini_commands)
     
     def run_step(self, target_speed, prev_waypoint, waypoint):
@@ -65,7 +65,8 @@ class Controller2D_interface():
         curr_transform = self._vehicle.get_transform()
         curr_location = curr_transform.location
         curr_rotation = curr_transform.rotation
-        curr_velocity = self._vehicle.get_velocity
+        curr_velocity = self._vehicle.get_velocity()
+        
         curr_speed = np.sqrt(np.square(curr_velocity.x) + np.square(curr_velocity.y))
         curr_snapshot = self._world.get_snapshot()
         curr_time = curr_snapshot.timestamp.platform_timestamp # TODO: not sure about this (using os time stampe)
@@ -74,24 +75,31 @@ class Controller2D_interface():
         curr_state = State(curr_location.x, curr_location.y, curr_rotation.yaw, curr_speed, curr_time, curr_frame)
 
         # build waypoints for c++ code
-        prev_location = prev_waypoint.transfrom.location
+        prev_location = prev_waypoint.transform.location
         prev_waypoint = Waypoint(prev_location.x, prev_location.y, -1) # TODO: currently not using speed
         curr_w_location = waypoint.transform.location
         curr_waypoint = Waypoint(curr_w_location.x, curr_w_location.y, target_speed) 
         
+        print("controller2D_interface.py is about to run step using C++ Controller2D")
         # run step using c++ controller
         new_commands = self.vehicle_controller.run_step(curr_state, prev_waypoint, curr_waypoint, dt)
-        return new_commands
+        
+        # format return controls
+        new_controls = carla.VehicleControl(new_commands.get_app(), 
+                                            new_commands.get_steering_angle_rate(), 
+                                            new_commands.get_bpp())
+        
+        return new_controls
 
 
-my_waypoint = Waypoint(1.1, 2.2, 3.3)
-print(my_waypoint)
+# my_waypoint = Waypoint(1.1, 2.2, 3.3)
+# print(my_waypoint)
 
-my_state = State()
-print(my_state)
+# my_state = State()
+# print(my_state)
 
-my_commands = Commands()
-print(my_commands)
+# my_commands = Commands()
+# print(my_commands)
 
-my_controller = Controller2D([my_waypoint, my_waypoint], my_commands)
-print(my_controller)
+# my_controller = Controller2D([my_waypoint, my_waypoint], my_commands)
+# print(my_controller)
