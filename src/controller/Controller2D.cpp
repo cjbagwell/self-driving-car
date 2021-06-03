@@ -61,10 +61,10 @@ Controller2D::~Controller2D(){
 
 }
 
-Commands Controller2D::runStep(State currState, Waypoint prevWaypoint, Waypoint currWaypoint, double dt){
+Commands Controller2D::runStep(State currState, Waypoint currWaypoint, double dt){
     Commands newCommands;
     double requestedAcceleration = this->lonController.runStep(currState.speed, currWaypoint.getV(), dt);
-    double requestedSteering = this->latController.runStep(currState, prevWaypoint, currWaypoint);
+    double requestedSteering = this->latController.runStep(currState, currWaypoint);
     // cout<< "current speed " << currState.speed << "\tcurrent targetSpeed " << currWaypoint.getV() << 
     //     "\trequested Acceleration " << requestedAcceleration << endl;
 
@@ -97,10 +97,7 @@ double LongitudinalPIDController::runStep(double currentSpeed, double targetSpee
     return max(-1.0, min(returnVal, 1.0));
 }
 
-double LateralStanleyController::runStep(State currState, Waypoint prevWaypoint, Waypoint currWaypoint){
-    // double a = tan(currWaypoint.getYaw());
-    // double b = -1;
-    // double c = currWaypoint.getY() - a * currWaypoint.getX();
+double LateralStanleyController::runStep(State currState,Waypoint currWaypoint){
     double dx = currState.x - currWaypoint.getX();
     double dy = currState.y - currWaypoint.getY();
     arma::rowvec distVec = {dx, dy};

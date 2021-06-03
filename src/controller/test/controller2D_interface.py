@@ -57,7 +57,7 @@ class Controller2DInterface():
 
         self.vehicle_controller = Controller2D(ini_commands, kp, ki, kd, ks, kcte)
     
-    def run_step(self, target_speed, prev_waypoint, waypoint):
+    def run_step(self, target_speed, waypoint):
         """
         Execute one step of control invoking both lateral and longitudinal
         PID controllers to reach a target waypoint
@@ -69,7 +69,6 @@ class Controller2DInterface():
         """
         # carla variables
         physics_control = self._vehicle.get_physics_control()
-        com = physics_control.center_of_mass
         wheels = physics_control.wheels
         w0x = wheels[0].position.x/100
         w0y = wheels[0].position.y/100
@@ -80,7 +79,6 @@ class Controller2DInterface():
 
         # build state for c++ code
         curr_transform = self._vehicle.get_transform()
-        curr_location = curr_transform.location
         curr_rotation = curr_transform.rotation
         curr_velocity = self._vehicle.get_velocity()
 
@@ -99,15 +97,12 @@ class Controller2DInterface():
         curr_state = State(front_ax_x, front_ax_y, np.deg2rad(curr_rotation.yaw), curr_speed, curr_time, curr_frame)
 
         # build waypoints for c++ code
-        prev_location = prev_waypoint.transform.location
-        prev_rotation = prev_waypoint.transform.rotation
-        prev_waypoint = Waypoint(prev_location.x, prev_location.y, np.deg2rad(prev_rotation.yaw), -1) # TODO: currently not using speed
         curr_w_location = waypoint.transform.location
         curr_w_rotation = waypoint.transform.rotation
         curr_waypoint = Waypoint(curr_w_location.x, curr_w_location.y, np.deg2rad(curr_w_rotation.yaw), target_speed) 
         
         # run step using c++ controller
-        new_commands = self.vehicle_controller.run_step(curr_state, prev_waypoint, curr_waypoint, dt)
+        new_commands = self.vehicle_controller.run_step(curr_state, curr_waypoint, dt)
         
         # format return controls
         new_controls = carla.VehicleControl(new_commands.get_app(), 

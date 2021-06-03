@@ -103,7 +103,7 @@ namespace controller{
          * @param currWaypoint 
          * @return double 
          */
-        double runStep(State currState, Waypoint prevWaypoint, Waypoint currWaypoint);
+        double runStep(State currState, Waypoint currWaypoint);
     };
     
     class Controller2D{
@@ -160,7 +160,7 @@ namespace controller{
          * @param currWaypoint 
          * @return Commands 
          */
-        Commands runStep(State currState, Waypoint prevWaypoint, Waypoint currWaypoint, double dt);
+        Commands runStep(State currState, Waypoint currWaypoint, double dt);
     };
     
     
