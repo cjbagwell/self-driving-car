@@ -11,8 +11,8 @@ except IndexError:
     print("error finding Carla module in controller2D_interface.py")
     pass
 
+# TODO: fix importing so no warnings
 import carla
-
 from py_controller import Waypoint, Controller2D, Commands, State
 
 class Controller2DInterface():
