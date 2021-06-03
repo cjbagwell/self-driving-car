@@ -15,10 +15,14 @@
 #include<list>
 #include<tuple>
 #include<iostream>
+#include<iomanip>
 #include<ostream>
 #include<limits>
 #include<algorithm>
 #include<numeric>
+
+// other lib includes
+// #include<armadillo>
 
 // project lib includes
 #include<pybind11/pybind11.h>
@@ -94,25 +98,33 @@ double LongitudinalPIDController::runStep(double currentSpeed, double targetSpee
 }
 
 double LateralStanleyController::runStep(State currState, Waypoint prevWaypoint, Waypoint currWaypoint){
-    double a = tan(currWaypoint.getYaw());
-    double b = -1;
-    double c = currWaypoint.getY() - a * currWaypoint.getX();
+    // double a = tan(currWaypoint.getYaw());
+    // double b = -1;
+    // double c = currWaypoint.getY() - a * currWaypoint.getX();
+    double dx = currState.x - currWaypoint.getX();
+    double dy = currState.y - currWaypoint.getY();
+    // arma::rowvec distVec = {dx, dy};
+    // arma::rowvec frontAxleVec = {-cos(currState.yaw + PI/2), -sin(currState.yaw + PI/2)};
+
     double yawDesired = wrap2pi(currWaypoint.getYaw());   // desired heading (yaw)
     double yawError = wrap2pi(yawDesired - currState.yaw); // heading error
-    double cte = (a*currState.x + b*currState.y + c) / sqrt(a*a + b*b); //cross track error
+    double cte = -cos(currState.yaw + PI/2) * dx - sin(currState.yaw + PI/2) * dy; //cross track error
     double ctCorrection = atan2(kcte*cte, ks + currState.speed); //TODO: not sure about the minus velocity softening
     
-    cout << "lateralController yawDesired " << yawDesired << 
+
+    cout << fixed;
+    cout << setprecision(4);
+    cout << "lateralController \n" <<
+            "yawDesired " << yawDesired << 
             "\tcurrYaw " << currState.yaw << 
-            "\tcte " << cte << 
-            "\nctCorrection " << ctCorrection << 
             "\tyaw_error " << yawError << 
-            "\tcommand " << yawError + ctCorrection << 
+            "\ncte " << cte << 
+            "\tctCor " << ctCorrection << 
+            "\ncommand " << yawError + ctCorrection << 
             "\twrapped command " << wrap2pi(yawError + ctCorrection) <<
             "\n" << endl;
     return (yawError + ctCorrection)/PI;
 }
-
 
 PYBIND11_MODULE(py_controller, handle){
         py::class_<Waypoint>(handle, "Waypoint")

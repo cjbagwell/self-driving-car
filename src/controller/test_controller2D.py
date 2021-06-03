@@ -127,7 +127,8 @@ class World(object):
             random.seed(args.seed)
 
         # Get a random blueprint.
-        blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
+        bp_library = self.world.get_blueprint_library().filter(self._actor_filter)
+        blueprint = random.choice(bp_library)
         blueprint.set_attribute('role_name', 'hero')
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
@@ -1085,8 +1086,8 @@ def main():
     argparser.add_argument(
         '--filter',
         metavar='PATTERN',
-        default='vehicle.*',
-        help='Actor filter (default: "vehicle.*")')
+        default='vehicle.tesla.model3',
+        help='Actor filter (default: "vehicle.tesla.model3")')
     argparser.add_argument(
         '--gamma',
         default=2.2,

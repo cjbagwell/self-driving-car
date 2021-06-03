@@ -51,9 +51,9 @@ class Controller2DInterface():
         print("ini_commands {}".format(ini_commands))
         kp = 0.7
         ki = 0.2
-        kd = 0.5
-        ks = 1
-        kcte = 4.0
+        kd = 0.1
+        ks = 0.1
+        kcte = 1.0
 
         self.vehicle_controller = Controller2D(ini_commands, kp, ki, kd, ks, kcte)
     
@@ -67,18 +67,36 @@ class Controller2DInterface():
             :param waypoint: target location encoded as a waypoint
             :return: distance (in meters) to the waypoint
         """
+        # carla variables
+        physics_control = self._vehicle.get_physics_control()
+        com = physics_control.center_of_mass
+        wheels = physics_control.wheels
+        w0x = wheels[0].position.x/100
+        w0y = wheels[0].position.y/100
+        w1x = wheels[1].position.x/100
+        w1y = wheels[1].position.y/100
+        front_ax_x = (w0x+w1x)/2
+        front_ax_y = (w0y+w1y)/2
+
         # build state for c++ code
         curr_transform = self._vehicle.get_transform()
         curr_location = curr_transform.location
         curr_rotation = curr_transform.rotation
         curr_velocity = self._vehicle.get_velocity()
+
+        # debug info 
+        # print("Wheel 0 location: {}, {}".format(w0x, w0y))
+        # print("Wheel 1 location: {}, {}".format(w1x, w1y))
+        # print("Center of Front : {}, {}".format(front_ax_x, front_ax_y))
+        # print("Vehicle location: {}, {}, {}".format(curr_location.x, curr_location.y, curr_rotation.yaw))
+        # print("Center  of  Mass: {}, {}".format(com.x, com.y))
         
         curr_speed = np.sqrt(np.square(curr_velocity.x) + np.square(curr_velocity.y))
         curr_snapshot = self._world.get_snapshot()
         curr_time = curr_snapshot.timestamp.platform_timestamp # TODO: not sure about this (using os time stampe)
         curr_frame = curr_snapshot.timestamp.frame
         dt = curr_snapshot.timestamp.delta_seconds
-        curr_state = State(curr_location.x, curr_location.y, np.deg2rad(curr_rotation.yaw), curr_speed, curr_time, curr_frame)
+        curr_state = State(front_ax_x, front_ax_y, np.deg2rad(curr_rotation.yaw), curr_speed, curr_time, curr_frame)
 
         # build waypoints for c++ code
         prev_location = prev_waypoint.transform.location
