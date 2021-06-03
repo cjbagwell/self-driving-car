@@ -7,14 +7,10 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
  
 """Example of automatic vehicle control from client side."""
-
 from __future__ import print_function
-
-import argparse
 import collections
 import datetime
 import glob
-import logging
 import math
 import os
 import random
@@ -41,7 +37,6 @@ except ImportError:
 # ==============================================================================
 try:
     sys.path.append(glob.glob('/opt/carla-simulator/PythonAPI/carla/dist/carla-0.9.11-py3.7-linux-x86_64.egg')[0])
-    print("successfully found Carla module")
 except IndexError:
     print("error finding Carla module")
     pass
@@ -51,23 +46,24 @@ except IndexError:
 # ==============================================================================
 try:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath('/opt/carla-simulator/PythonAPI'))) + '/carla')
-    print("successful addition of PythonAPI for release mode")
 except IndexError:
-    print("error wild adding PythonAPI for release mode")
+    print("error while adding PythonAPI for release mode")
     pass
 
 import carla
 from carla import ColorConverter as cc
 
-# from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
-# from agents.navigation.roaming_agent import RoamingAgent  # pylint: disable=import-error
-# from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
+from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
+from agents.navigation.roaming_agent import RoamingAgent  # pylint: disable=import-error
+from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
+
+# my classes
+from test_agent import TestAgent
 
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
-
 
 def find_weather_presets():
     """Method to find weather presets"""
@@ -125,7 +121,8 @@ class World(object):
             random.seed(args.seed)
 
         # Get a random blueprint.
-        blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
+        bp_library = self.world.get_blueprint_library().filter(self._actor_filter)
+        blueprint = random.choice(bp_library)
         blueprint.set_attribute('role_name', 'hero')
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
@@ -662,7 +659,116 @@ class CameraManager(object):
         if self.recording:
             image.save_to_disk('_out/%08d' % image.frame)
 
+
 # ==============================================================================
 # -- Game Loop ---------------------------------------------------------
 # ==============================================================================
+
+
+def game_loop(args):
+    """ Main loop for agent"""
+
+    pygame.init()
+    pygame.font.init()
+    world = None
+    tot_target_reached = 0
+    num_min_waypoints = 21
+
+    try:
+        client = carla.Client(args.host, args.port)
+        client.set_timeout(4.0)
+
+        display = pygame.display.set_mode(
+            (args.width, args.height),
+            pygame.HWSURFACE | pygame.DOUBLEBUF)
+
+        hud = HUD(args.width, args.height)
+        client.load_world('Town02')
+        world = World(client.get_world(), hud, args)
+        controller = KeyboardControl(world)
+
+        if args.agent == "Roaming":
+            print("Selecting Roaming Agent")
+            agent = RoamingAgent(world.player)
+        elif args.agent == "Basic":
+            print("Selecting Basic Agent")
+            agent = BasicAgent(world.player)
+            spawn_point = world.map.get_spawn_points()[0]
+            agent.set_destination((spawn_point.location.x,
+                                   spawn_point.location.y,
+                                   spawn_point.location.z))
+        elif args.agent == "Test":
+            print("Selecting Test Agent")
+            agent = TestAgent(world.player)
+            spawn_point = world.map.get_spawn_points()[0]
+            agent.set_destination((spawn_point.location.x,
+                                   spawn_point.location.y,
+                                   spawn_point.location.z))
+        else:
+            print("Selecting BehaviourAgent")
+            agent = BehaviorAgent(world.player, behavior=args.behavior)
+
+            spawn_points = world.map.get_spawn_points()
+            random.shuffle(spawn_points)
+
+            if spawn_points[0].location != agent.vehicle.get_location():
+                destination = spawn_points[0].location
+            else:
+                destination = spawn_points[1].location
+
+            agent.set_destination(agent.vehicle.get_location(), destination, clean=True)
+
+        clock = pygame.time.Clock()
+
+        while True:
+            clock.tick_busy_loop(60)
+            if controller.parse_events():
+                return
+
+            # As soon as the server is ready continue!
+            if not world.world.wait_for_tick(10.0):
+                continue
+
+            if args.agent == "Roaming" or args.agent == "Basic" or args.agent == "Test":
+                if controller.parse_events():
+                    return
+
+                # as soon as the server is ready continue!
+                world.world.wait_for_tick(10.0)
+
+                world.tick(clock)
+                world.render(display)
+                pygame.display.flip()
+                control = agent.run_step()
+                control.manual_gear_shift = False
+                world.player.apply_control(control)
+            else:
+                agent.update_information()
+
+                world.tick(clock)
+                world.render(display)
+                pygame.display.flip()
+
+                # Set new destination when target has been reached
+                if len(agent.get_local_planner().waypoints_queue) < num_min_waypoints and args.loop:
+                    agent.reroute(spawn_points)
+                    tot_target_reached += 1
+                    world.hud.notification("The target has been reached " +
+                                           str(tot_target_reached) + " times.", seconds=4.0)
+
+                elif len(agent.get_local_planner().waypoints_queue) == 0 and not args.loop:
+                    print("Target reached, mission accomplished...")
+                    break
+
+                speed_limit = world.player.get_speed_limit()
+                agent.get_local_planner().set_speed(speed_limit)
+
+                control = agent.run_step()
+                world.player.apply_control(control)
+
+    finally:
+        if world is not None:
+            world.destroy()
+
+        pygame.quit()
 
