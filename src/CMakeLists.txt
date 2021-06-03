@@ -12,6 +12,8 @@ pybind11_add_module(py_controller controller/Controller2D.cpp)
 target_link_libraries(
     py_controller
     PRIVATE pybind11::embed
+    armadillo
 )
+
 
 include_directories(/usr/include/python3.8)
