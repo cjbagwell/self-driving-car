@@ -50,15 +50,15 @@ except IndexError:
     print("error while adding PythonAPI for release mode")
     pass
 
-import carla
-from carla import ColorConverter as cc
+import carla #type:ignore
+from carla import ColorConverter as cc #type:ignore
 
 from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
 from agents.navigation.roaming_agent import RoamingAgent  # pylint: disable=import-error
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
 
 # my classes
-from test_agent import TestAgent
+from test_agent import TestAgent #type:ignore
 
 
 # ==============================================================================

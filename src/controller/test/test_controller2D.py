@@ -8,7 +8,7 @@
  
 """Example of automatic vehicle control from client side."""
 from __future__ import print_function
-from carla_util import *
+from carla_util import game_loop #type:ignore
 import argparse
 import glob
 import logging
@@ -35,8 +35,8 @@ except IndexError:
     pass
 
 # my classes
-from test_agent import TestAgent
-from carla_util import *
+from test_agent import TestAgent #type:ignore
+from carla_util import * #type:ignore
 
 def main():
     """Main method"""

@@ -11,9 +11,10 @@ from __future__ import print_function
 import glob
 import os
 import sys
+import carla #type:ignore
 
 # my modules
-from controller2D_interface import Controller2DInterface
+from controller2D_interface import Controller2DInterface #type:ignore
 
 # ==============================================================================
 # -- Find CARLA module ---------------------------------------------------------
