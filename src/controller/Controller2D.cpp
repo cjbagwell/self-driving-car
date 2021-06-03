@@ -105,10 +105,9 @@ double LateralStanleyController::runStep(State currState, Waypoint prevWaypoint,
     double dy = currState.y - currWaypoint.getY();
     arma::rowvec distVec = {dx, dy};
     arma::rowvec frontAxleVec = {-cos(currState.yaw + PI/2), -sin(currState.yaw + PI/2)};
-    double test = arma::dot(distVec, frontAxleVec);
     double yawDesired = wrap2pi(currWaypoint.getYaw());   // desired heading (yaw)
     double yawError = wrap2pi(yawDesired - currState.yaw); // heading error
-    double cte = -cos(currState.yaw + PI/2) * dx - sin(currState.yaw + PI/2) * dy; //cross track error
+    double cte = arma::dot(distVec, frontAxleVec); // cross track error
     double ctCorrection = atan2(kcte*cte, ks + currState.speed); //TODO: not sure about the minus velocity softening
     
 
