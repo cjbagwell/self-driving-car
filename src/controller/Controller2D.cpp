@@ -49,13 +49,8 @@ void printCommands(Commands c){
 
 /**Wraps input to -PI/2 -> +PI/2 */
 double wrap2pi(double angle){
-    if(angle > PI/2){
-        angle -= PI; 
-    }
-    else if(angle < -PI/2){
-        angle += PI;
-    }
-    return angle;
+    
+    return atan(tan(angle));
 }
 
 Controller2D::~Controller2D(){
@@ -105,7 +100,7 @@ double LateralStanleyController::runStep(State currState, Waypoint prevWaypoint,
     double yawDesired = wrap2pi(currWaypoint.getYaw());   // desired heading (yaw)
     double yawError = wrap2pi(yawDesired - currState.yaw); // heading error
     double cte = (a*currState.x + b*currState.y + c) / sqrt(a*a + b*b); //cross track error
-    double ctCorrection = -atan2(kcte*cte, ks + currState.speed); //TODO: not sure about the minus velocity softening
+    double ctCorrection = atan2(kcte*cte, ks + currState.speed); //TODO: not sure about the minus velocity softening
     
     cout << "lateralController yawDesired " << yawDesired << 
             "\tcurrYaw " << currState.yaw << 
@@ -115,7 +110,7 @@ double LateralStanleyController::runStep(State currState, Waypoint prevWaypoint,
             "\tcommand " << yawError + ctCorrection << 
             "\twrapped command " << wrap2pi(yawError + ctCorrection) <<
             "\n" << endl;
-    return (yawError + ctCorrection)/PI/2;
+    return (yawError + ctCorrection)/PI;
 }
 
 

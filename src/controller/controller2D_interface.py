@@ -52,8 +52,8 @@ class Controller2DInterface():
         kp = 0.7
         ki = 0.2
         kd = 0.5
-        ks = 0.25
-        kcte = 1.0
+        ks = 1
+        kcte = 4.0
 
         self.vehicle_controller = Controller2D(ini_commands, kp, ki, kd, ks, kcte)
     
