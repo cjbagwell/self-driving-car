@@ -33,7 +33,21 @@ namespace controller{
         const double kp, ki, kd;
         list<double> errorBuffer; /** TODO: probably change the type of erBuf */
     public:
+        /**
+         * @brief Construct a new Longitudinal P I D Controller object
+         * TODO: update docs
+         * 
+         */
         LongitudinalPIDController():kp(1.0), ki(0.2), kd(0.5) {};
+        
+        /**
+         * @brief Construct a new Longitudinal P I D Controller object
+         * TODO: update docs
+         * 
+         * @param kp 
+         * @param ki 
+         * @param kd 
+         */
         LongitudinalPIDController(double kp, 
                                double ki, 
                                double kd)
@@ -43,6 +57,15 @@ namespace controller{
                                kd(kd)
                                {};
         
+        /**
+         * @brief 
+         * TODO: update docs
+         * 
+         * @param currentSpeed 
+         * @param targetSpeed 
+         * @param dt 
+         * @return double 
+         */
         double runStep(double currentSpeed, double targetSpeed, double dt); 
     };
 
@@ -50,13 +73,36 @@ namespace controller{
     private:
         double ks, kcte;
     public:
+        /**
+         * @brief Construct a new Lateral Stanley Controller object
+         * TODO: update docs
+         * 
+         */
         LateralStanleyController():ks(0.1), kcte(1.0) {};
+        
+        /**
+         * @brief Construct a new Lateral Stanley Controller object
+         * TODO: update docs
+         * 
+         * @param ks 
+         * @param kcte 
+         */
         LateralStanleyController(double ks, 
                                  double kcte)
                                  :
                                  ks(ks),
                                  kcte(kcte)
                                  {};
+        
+        /**
+         * @brief 
+         * TODO: update docs
+         * 
+         * @param currState NOTE: the position of state is assumed to be at front axle
+         * @param prevWaypoint 
+         * @param currWaypoint 
+         * @return double 
+         */
         double runStep(State currState, Waypoint prevWaypoint, Waypoint currWaypoint);
     };
     
@@ -106,7 +152,8 @@ namespace controller{
         void updateWaypoints(const vector<Waypoint> &newWaypoints){this->waypoints = newWaypoints;}
         
         /**
-         * @brief TODO: update docs
+         * @brief 
+         * TODO: update docs
          * 
          * @param currState 
          * @param prevWaypoint 
