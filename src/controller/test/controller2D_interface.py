@@ -49,11 +49,11 @@ class Controller2DInterface():
         # generate starting commands
         ini_commands = Commands(past_app, past_bpp, self.past_steering)
         print("ini_commands {}".format(ini_commands))
-        kp = 0.7
-        ki = 0.2
-        kd = 0.1
+        kp = 1.0
+        ki = 0.05
+        kd = 0.2
         ks = 0.1
-        kcte = 1.0
+        kcte = 1.8
 
         self.vehicle_controller = Controller2D(ini_commands, kp, ki, kd, ks, kcte)
     
