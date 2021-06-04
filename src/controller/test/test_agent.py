@@ -37,7 +37,7 @@ from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 
 # my class imports
-from test_local_planner import TestLocalPlanner
+from test_local_planner import TestLocalPlanner #type:ignore
 
 
 

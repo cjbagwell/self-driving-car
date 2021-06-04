@@ -13,7 +13,7 @@ except IndexError:
 
 # TODO: fix importing so no warnings
 import carla
-from py_controller import Waypoint, Controller2D, Commands, State
+from py_controller import Waypoint, Controller2D, Commands, State #type:ignore
 
 class Controller2DInterface():
     def __init__(self, vehicle, args_lateral, args_longitudinal, offset=0, max_throttle=0.75, max_brake=0.3,
