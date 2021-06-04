@@ -19,6 +19,7 @@ import sys
 import weakref
 import argparse
 import logging
+from matplotlib import pyplot as plt
 
 try:
     import pygame
@@ -660,10 +661,90 @@ class CameraManager(object):
         if self.recording:
             image.save_to_disk('_out/%08d' % image.frame)
 
+gnss_events = []
+loc_events  = []
+imu_events  = []
 
 def gnss_callback(data, agent):
-    print("In gnss callback! \ndata: {}".format(data))
-    print("Agent location: {}\n\n".format(agent.vehicle.get_location()))
+    loc = agent.vehicle.get_location()
+    t = data.timestamp
+    loc_events.append((t, loc))
+    gnss_events.append(data)
+
+def imu_callback(data, agent):
+    loc = agent.vehicle.get_location()
+    t = data.timestamp
+    imu_events.append(data)
+    loc_events.append((t, loc))
+
+
+def write_data_file(f_name, data):
+    # write to file
+    out_file = open(f_name, 'w')
+    lns = []
+    for d in data:
+        # print(d)
+        ln = ""
+        for item in d:
+            ln += str(item)
+            if item is not d[-1]:
+                ln += ","
+        ln += "\n"
+        lns.append(ln)
+    out_file.writelines(lns)
+    out_file.close()
+
+def create_data_files(gnss_es, imu_es, loc_es):
+    print("Creating data files...")
+
+    # GNSS Data
+    gnss_times = []
+    lats = []
+    lons = []
+    alts = []
+    for event in gnss_es:
+        gnss_times.append(event.timestamp)
+        lats.append(event.latitude)
+        lons.append(event.longitude)
+        alts.append(event.altitude)
+    gnss_data = zip(gnss_times, lats, lons, alts)
+    write_data_file("GNSS_data.txt", gnss_data)
+
+    # IMU  Data
+    imu_times = []
+    ac_x = []
+    ac_y = []
+    ac_z = []
+    comp = []
+    gy_x = []
+    gy_y = []
+    gy_z = []
+    for event in imu_es:
+        imu_times.append(event.timestamp)
+        ac_x.append(event.accelerometer.x)
+        ac_y.append(event.accelerometer.y)
+        ac_z.append(event.accelerometer.z)
+        comp.append(event.compass)
+        gy_x.append(event.gyroscope.x)
+        gy_y.append(event.gyroscope.y)
+        gy_z.append(event.gyroscope.z)
+    imu_data = zip(imu_times, ac_x, ac_y, ac_z, comp, gy_x, gy_y, gy_z)
+    write_data_file("IMU_data.txt", imu_data)
+
+
+    # Location Data (one for each sensor event)
+    loc_times = []
+    locx = []
+    locy = []
+    locz = []
+    for t, event in loc_es:
+        loc_times.append(t)
+        locx.append(event.x)
+        locy.append(event.y)
+        locz.append(event.z)
+    location_data = zip(loc_times, locx, locy, locz)  
+    write_data_file("Location_data.txt", location_data)  
+    print("Finished writing data files")
 
 # ==============================================================================
 # -- Game Loop ---------------------------------------------------------
@@ -717,29 +798,29 @@ def game_loop(args):
             agent.set_destination(agent.vehicle.get_location(), destination, clean=True)
         
         # load sensors
-        bp_lib = client.get_world().get_blueprint_library()
+        cworld = client.get_world()
+        bp_lib = cworld.get_blueprint_library()
         camera_bp = bp_lib.find('sensor.camera.rgb')
-        camera = client.get_world().spawn_actor(
+        camera = cworld.spawn_actor(
             blueprint=camera_bp,
             transform=carla.Transform(carla.Location(x=1.6, z=1.6)),
             attach_to=agent.vehicle)
         
         gnss_bp = bp_lib.find('sensor.other.gnss')
-        gnss = client.get_world().spawn_actor(
+        gnss = cworld.spawn_actor(
             blueprint=gnss_bp,
             transform=carla.Transform(carla.Location(x=0, y=0, z=1)),
             attach_to=agent.vehicle)
 
         imu_bp = bp_lib.find('sensor.other.imu')
-        imu = client.get_world().spawn_actor(
+        imu = cworld.spawn_actor(
             blueprint=imu_bp,
             transform=carla.Transform(carla.Location(x=0, y=0, z=1)),
             attach_to=agent.vehicle)
-        print("We made it baby!!")
 
-        # Setting up sensor callback
+        # Setting up sensor callbacks
         gnss.listen(lambda data: gnss_callback(data, agent))
-
+        imu.listen(lambda data: imu_callback(data, agent))
         clock = pygame.time.Clock()
 
         while True:
@@ -781,6 +862,9 @@ def game_loop(args):
                 elif len(agent.get_local_planner().waypoints_queue) == 0 and not args.loop:
                     print("Target reached, mission accomplished...")
                     break
+                # elif len(gnss_events) > 200:
+                #     print("Got enough data to quit")
+                #     break
 
                 speed_limit = world.player.get_speed_limit()
                 agent.get_local_planner().set_speed(speed_limit)
@@ -793,6 +877,8 @@ def game_loop(args):
             world.destroy()
 
         pygame.quit()
+
+
 
 def main():
     """Main method"""
@@ -863,10 +949,12 @@ def main():
 
     try:
         game_loop(args)
+        
 
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
-
+        
+    create_data_files(gnss_events, imu_events, loc_events)
 
 if __name__ == '__main__':
     main()

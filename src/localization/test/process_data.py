@@ -1,0 +1,153 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# helper functions
+def latlon2position(lat, lon):
+    r_earth = 6.371*10**6
+    x =  lon * r_earth
+    y = -lat * r_earth
+    return x, y
+
+##################################################
+# Dataset Handler
+##################################################
+class DatasetHandler:
+    def __init__(self):
+        self.gnss_data = {}
+        self.imu_data = {}
+        self.gt_data = {}
+    
+    def set_gnss_data(self, ts, lats, lons, alts, xs, ys):
+        self.gnss_data["times"] = ts
+        self.gnss_data["lats"] = lats
+        self.gnss_data["lons"] = lons
+        self.gnss_data["xs"] = xs
+        self.gnss_data["ys"] = ys
+    
+    def set_imu_data(self, ts, accel, comp, gyro):
+        self.imu_data["times"] = ts
+        self.imu_data["accel"] = accel
+        self.imu_data["comp"] = comp
+        self.imu_data["gyro"] = gyro
+
+    def set_gt_data(self, ts, xs, ys, zs):
+        self.gt_data["times"] = ts
+        self.gt_data["xs"] = xs
+        self.gt_data["ys"] = ys
+        self.gt_data["zs"] = zs
+    
+    def get_gnss_data(self):
+        return self.gnss_data["times"], self.gnss_data["lats"], self.gnss_data["lons"], \
+            self.gnss_data["xs"], self.gnss_data["ys"]
+
+    def get_imu_data(self):
+        return self.imu_data["times"], self.imu_data["accel"], self.imu_data["comp"], self.imu_data["gyro"]
+
+    def get_gt_data(self):
+        return self.gt_data["times"], self.gt_data["xs"], self.gt_data["ys"], self.gt_data["zs"]
+
+ds_handler = DatasetHandler()
+
+##################################################
+# Process GNSS Data
+##################################################
+data_file = open("GNSS_data.txt", 'r')
+gnss_times = []
+lats = []
+lons = []
+alts = []
+
+# split data
+lns = data_file.read().splitlines()
+data_file.close()
+for ln in lns:
+    elems = ln.split(',')
+    elems = [float(elem) for elem in elems]
+    gnss_times.append(elems[0])
+    lats.append(elems[1])
+    lons.append(elems[2])
+    alts.append(elems[3])
+
+# convert from degrees
+lats = [np.deg2rad(lat) for lat in lats]
+lons = [np.deg2rad(lon) for lon in lons]
+
+# convert lat lons to positions
+gnsp = [latlon2position(lat, lon) for lat, lon in zip(lats, lons)]
+gnsx = [x for x, y in gnsp]
+gnsy = [y for x, y in gnsp]
+ds_handler.set_gnss_data(gnss_times, alts, lons, alts, gnsx, gnsy)
+
+##################################################
+# Process IMU Data
+##################################################
+data_file = open("IMU_data.txt", 'r')
+imu_times = []
+accel = []
+comp = []
+gyro = []
+
+# split data
+lns = data_file.read().splitlines()
+data_file.close()
+for ln in lns:
+    elems = ln.split(',')
+    elems = [float(elem) for elem in elems]
+    imu_times.append(elems[0])
+    accel.append((elems[1], elems[2], elems[3]))
+    comp.append(elems[4])
+    gyro.append((elems[5], elems[6], elems[7]))
+ds_handler.set_imu_data(imu_times, accel, comp, gyro)
+
+##################################################
+# Process GT Location Data
+##################################################
+data_file = open("Location_data.txt", 'r')
+location_times = []
+locx = []
+locy = []
+locz = []
+
+# split data
+lns = data_file.read().splitlines()
+data_file.close()
+for ln in lns:
+    elems = ln.split(',')
+    elems = [float(elem) for elem in elems]
+    location_times.append(elems[0])
+    locx.append(elems[1])
+    locy.append(elems[2])
+    locz.append(elems[3])
+ds_handler.set_gt_data(location_times, locx, locy, locz)
+
+##################################################
+# Visualize Data
+##################################################
+gnss_times, lats, lons, gnss_xs, gnss_ys = ds_handler.get_gnss_data()
+
+plt.figure(1)
+plt.plot(gnss_times, gnss_xs, 'r', gnss_times, gnss_ys, 'b')
+plt.legend(["GNSS x", "GNSS y"])
+plt.xlabel("Time [s]")
+plt.ylabel("Position [m]")
+plt.draw()
+
+gt_times, gt_xs, gt_ys, gt_zs = ds_handler.get_gt_data()
+plt.figure(2)
+plt.plot(gt_times, gt_xs, 'r', gt_times, gt_ys, 'b')
+plt.legend(["GT x", "GT y",])
+plt.xlabel("time [s]")
+plt.ylabel("position [m]")
+plt.draw()
+plt.show()
+
+
+# # print(gnss_data_file.read())
+# # while True:
+# #     ln = gnss_data_file.readline()
+# #     ln.strip()
+# #     if ln != "":
+# #         elems = ln.split(',')
+# #         # print(elems)
+# #     else:
+# #         break
