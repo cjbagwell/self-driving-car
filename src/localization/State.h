@@ -9,40 +9,49 @@
  * 
  */
 
-/**
- * @brief A State of a vehicle to be used for a self-driving car.
- * @param x The x location of the vehicle[m].
- * @param y The y location of the vehicle [m].
- * @param yaw The yaw of the vehicle [rad].
- * @param speed The speed of the vehicle [m/s].
- * @param time The time at this state [s].
- * @param frame TODO: uhh...idk
- */
+#include<armadillo>
+#include "rotations.h"
+
+using namespace arma;
+
 class State{
 public:
     /** TODO: probs make the members private */
-    double x;
-    double y;
-    double yaw;
-    double speed;
+    Col<double> pos;
+    Col<double> vel;
+    Quaternion rot;    
+    
     double time;
     int frame; /** TODO: not sure about the type of 'frame'*/
 
     /**
      * @brief Construct a new State object with all values set to their default values.
      */
-    State():x(0), y(0), yaw(0), speed(0), time(-1), frame(-1){};
+    State():pos(3), vel(3), rot(), time(-1), frame(-1){};
     
     /**
-     * @brief Construct a new State object.
+     * @brief Construct a new State object
      * 
-     * @param x The x location [m].
-     * @param y The y location [m].
-     * @param yaw The yaw of the vehicle [rad].
-     * @param speed The speed of the vehicle [m/s].
-     * @param time The time that this State is refering to [s].
-     * @param frame TODO: uhh...idk
+     * @param pos initial position vector
+     * @param vel initial velcotiy vector
+     * @param rot initial rotation Quaternion
+     * @param time time this state was calculated
+     * @param frame frame that this state was calcualted
      */
-    State(double x, double y, double yaw, double speed, double time, int frame):
-            x(x), y(y), yaw(yaw), speed(speed), time(time), frame(frame){};
+    State(Col<double> pos, 
+          Col<double> vel, 
+          Quaternion rot, 
+          double time=-1, 
+          double frame=-1)
+          :
+          pos(pos),
+          vel(vel),
+          rot(rot),
+          time(time),
+          frame(frame)
+          {};
+    
+    double getSpeed(){
+        return arma::norm(vel);
+    }
 };
