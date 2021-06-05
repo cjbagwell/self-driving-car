@@ -15,19 +15,35 @@
 #include<iostream>
 #include<ostream>
 #include<math.h>
+#include<algorithm>
+#include<vector>
 
 #ifndef ROTATIONS_H
 #define ROTATIONS_H
 
 using namespace arma;
 
+const double PI = 3.14159;
+
 /**
  * @brief TODO: some stuff here
  * 
- * @param a angle to normalize [rad]
- * @return double normalized angle [rad]
+ * @param angles 
+ * @return Row<double> 
  */
-double angleNormalize(double a);
+Row<double> angleNormalise(Row<double> angles){
+    std::vector<double> tmp;
+    for(auto angle: angles){
+        tmp.push_back(angleNormalise(angle));
+    }
+    return Row<double>(tmp);
+}
+
+double angleNormalise(double& angle){
+    if(angle <= -PI) angle += 2 * PI;
+    else if(angle > PI) angle -= 2 * PI;
+    return angle;
+}
 
 /**
  * @brief TODO: some stuff here
@@ -35,7 +51,11 @@ double angleNormalize(double a);
  * @param v 
  * @return arma::Mat<double> 
  */
-Mat<double> skewSemetric(Col<double> v);
+Mat<double> skewSemetric(Col<double> v){
+    return Mat<double>({{0, -v[2], v[1]}, 
+                        {v[2], 0, -v[0]}, 
+                        {-v[1], v[0], 0}});
+}
 
 
 class Quaternion{
@@ -102,14 +122,43 @@ public:
         return Quaternion(quatArr);
     }
 
-    Row<double> toAxisAngles(); /** TODO: implement this method*/
-    Row<double> toEulerAngles(); /** TODO: implement this method*/
-    Mat<double> toRotMat(); /** TODO: implement this method*/
+    Row<double> toAxisAngles(){
+        double t = 2 * acos(std::max(-1.0, std::min(this->w, 1.0)));
+        Row<double> angles = t * Row<double>({x, y, z});
+        return angles;
+    }
+    
+    Row<double> toEulerAngles(){
+        double roll  = atan2(2 * (w*x + y*z), 1 - 2*(x*x + y*y));
+        double pitch = asin(2 * (w*y - z*x));
+        double yaw   = atan2(2 * (w*z + x*y), 1 - 2 * (y*y + z*z));
+        return Row<double>({roll, pitch, yaw});
+    }
+
+    Mat<double> toRotMat(){
+        Col<double> v({x, y, z});
+        Row<double> vt = v.t();
+        return (w*w - dot(vt, v)) * eye(3,3) + 2*dot(v,vt) + 2*w*skewSemetric(v);
+    }
+
     Row<double> asVector(){
         return Row<double>({w, x, y, z});
     }
-    void normalize(); /** TODO: implement this method*/
     
+    void normalize(){
+        double norm = arma::norm(this->asVector());
+        this->w = this->w / norm;
+        this->x = this->x / norm;
+        this->y = this->y / norm;
+        this->z = this->z / norm;
+        return;
+    }
+    
+    Quaternion getInvers(){
+        double norm = arma::norm(this->asVector());
+        return Quaternion(this->asVector() / norm);
+    }
+
 };
 
 

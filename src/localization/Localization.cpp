@@ -33,8 +33,8 @@ const arma::Col<double> G({0.0, 0.0, -9.81});
 // ========================================================================
 
 State EsEKF::runStep(const Row<double> &newImu, const Row<double> &sensorVar){
-    /** TODO: implement this method */
-    
+    // 1. Update state with IMU measurement (motion model)
+    // 2. Propogate uncertainty
 }
 
 
