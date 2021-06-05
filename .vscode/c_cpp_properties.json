@@ -4,7 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include/opencv4"
+                "/usr/local/include/opencv4",
+                "${workspaceFolder}/libs/pybind11/include",
+                "${workspaceFolder}/libs/pybind11/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
