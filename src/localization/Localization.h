@@ -18,6 +18,7 @@
 
 // project lib includes
 #include "State.h"
+#include "ImuMeasurement.h"
 
 #ifndef LOCALIZATION_H
 #define LOCALIZATION_H
@@ -25,7 +26,7 @@
 class EsEKF{
 private:
     State currState, prevState;
-    arma::Mat<double> pCov, lJac, hJac;
+    arma::Mat<double> pCov;
 
 public:
     /**
@@ -48,7 +49,7 @@ public:
      *      TODO: add format for sensor variance
      * @returns the state of the vehicle after considering the new measurement
      */
-    State runStep(const arma::Row<double> &newImu, const arma::Row<double> &sensorVar);
+    State runStep(ImuMeasurement &newImu, arma::Row<double> &sensorVar);
     
     /**
      * updates the state of the vehicle based on a new measurement from the

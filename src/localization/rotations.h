@@ -26,6 +26,18 @@ using namespace arma;
 const double PI = 3.14159;
 
 /**
+ * @brief Wraps the input angle to the range -PI and PI
+ * 
+ * @param angle angle [rad] to be wrapped between -PI and PI
+ * @return double wrapped angle
+ */
+double angleNormalise(double& angle){
+    if(angle <= -PI) angle += 2 * PI;
+    else if(angle > PI) angle -= 2 * PI;
+    return angle;
+}
+
+/**
  * @brief TODO: some stuff here
  * 
  * @param angles 
@@ -37,12 +49,6 @@ Row<double> angleNormalise(Row<double> angles){
         tmp.push_back(angleNormalise(angle));
     }
     return Row<double>(tmp);
-}
-
-double angleNormalise(double& angle){
-    if(angle <= -PI) angle += 2 * PI;
-    else if(angle > PI) angle -= 2 * PI;
-    return angle;
 }
 
 /**
