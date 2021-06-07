@@ -98,6 +98,11 @@ PYBIND11_MODULE(py_localization, handle){
             .def(py::init<>())
             .def(py::init<vector<double>, vector<double>, vector<double>,double,int>())
             ;
+
+        py::class_<ImuMeasurement>(handle, "ImuMeasurement")
+            .def(py::init<>())
+            .def(py::init<vector<double>, double, vector<double>, double>())
+            ;
 }
 
 int main(){

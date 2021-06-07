@@ -9,11 +9,14 @@
  * @copyright Copyright (c) 2021
  * 
  */
-
-#include<armadillo>
+// std lib includes
 #include<iostream>
 #include<ostream>
 #include<vector>
+
+// project includes
+#include<armadillo>
+
 using namespace arma;
 using namespace std;
 
@@ -26,6 +29,8 @@ public:
     Row<double> accelerometer;
     double compas, time;
     Row<double> gyro;
+
+    friend ostream& operator<<(ostream& out, const ImuMeasurement& m);
 
     ImuMeasurement():accelerometer(3), compas(0), gyro(3), time(-1){};
     
@@ -76,7 +81,12 @@ public:
         }    
     };
 
-                
+    friend ostream& operator<<(ostream& out, const ImuMeasurement& m){
+        out << "{accel:" << m.accelerometer <<
+               ", comp:" << m.compas <<
+               ", gyro:" << m.gyro;
+        return out;
+    }
 };
 
 #endif

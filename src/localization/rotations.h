@@ -10,18 +10,21 @@
  * 
  */
 
-
-#include<armadillo>
+// std lib includes
 #include<iostream>
 #include<ostream>
 #include<math.h>
 #include<algorithm>
 #include<vector>
 
+// project includes
+#include<armadillo>
+
 #ifndef ROTATIONS_H
 #define ROTATIONS_H
 
 using namespace arma;
+using namespace std;
 
 const double PI = 3.14159;
 
@@ -68,6 +71,8 @@ class Quaternion{
 private:
     double w, x, y, z;
 public:
+    friend ostream& operator<<(ostream& out, const Quaternion& q);
+
     Quaternion(double w=1, double x=0, double y=0, double z=0):w(w), x(x), y(y), z(z){};
     Quaternion(Row<double> quaternionArray){
         this->w = quaternionArray[0];
@@ -167,5 +172,9 @@ public:
 
 };
 
+ostream& operator<<(ostream& out, const Quaternion& q){
+    out << "(" << q.w << ", " << q.x << ", " << q.y << ", " << q.z << ")";
+    return out;
+}
 
 #endif

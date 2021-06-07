@@ -8,7 +8,11 @@
  * @copyright Copyright (c) 2021
  * 
  */
+// std lib includes
+#include<iostream>
+#include<ostream>
 
+// project includes
 #include<armadillo>
 #include "rotations.h"
 
@@ -21,9 +25,10 @@ public:
     Col<double> pos;
     Col<double> vel;
     Quaternion rot;    
-    
     double time;
     int frame; /** TODO: not sure about the type of 'frame'*/
+
+    friend std::ostream& operator<<(std::ostream& out, const State& s);
 
     /**
      * @brief Construct a new State object with all values set to their default values.
@@ -69,3 +74,11 @@ public:
         return arma::norm(vel);
     }
 };
+
+std::ostream& operator<<(std::ostream& out, const State& s){
+    out << "State {frame:" << s.frame << 
+        "time:" << s.time << 
+        "pos:" << s.pos << 
+        " vel:" << s.vel << 
+        "rot:" << s.rot << "}";
+}
