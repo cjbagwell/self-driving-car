@@ -1,4 +1,5 @@
-build
-pythonClient
-*__pycache__*
-.vscode
+**/build
+**/testBuild
+**/pythonClient
+**/__pycache__
+**/.vscode
