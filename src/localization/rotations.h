@@ -152,12 +152,16 @@ public:
         return (w*w - dot(vt, v)) * eye(3,3) + 2*dot(v,vt) + 2*w*skewSemetric(v);
     }
 
-    Row<double> asVector(){
+    Row<double> asArma(){
         return Row<double>({w, x, y, z});
+    }
+
+    vector<double> asVector(){
+        return vector<double>({w, x, y, z});
     }
     
     void normalize(){
-        double norm = arma::norm(this->asVector());
+        double norm = arma::norm(this->asArma());
         this->w = this->w / norm;
         this->x = this->x / norm;
         this->y = this->y / norm;
@@ -166,8 +170,8 @@ public:
     }
     
     Quaternion getInvers(){
-        double norm = arma::norm(this->asVector());
-        return Quaternion(this->asVector() / norm);
+        double norm = arma::norm(this->asArma());
+        return Quaternion(this->asArma() / norm);
     }
 
 };
@@ -175,6 +179,11 @@ public:
 ostream& operator<<(ostream& out, const Quaternion& q){
     out << "(" << q.w << ", " << q.x << ", " << q.y << ", " << q.z << ")";
     return out;
+}
+
+Quaternion eulerToQuaternion(vector<double> angles){
+    Quaternion retQuat(angles, false);
+    return retQuat;
 }
 
 #endif

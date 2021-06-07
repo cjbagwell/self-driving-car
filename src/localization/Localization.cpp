@@ -97,12 +97,19 @@ PYBIND11_MODULE(py_localization, handle){
         py::class_<State>(handle, "State")
             .def(py::init<>())
             .def(py::init<vector<double>, vector<double>, vector<double>,double,int>())
+            .def_readwrite("time", &State::time)
             ;
 
         py::class_<ImuMeasurement>(handle, "ImuMeasurement")
             .def(py::init<>())
             .def(py::init<vector<double>, double, vector<double>, double>())
+            .def("get_time", &ImuMeasurement::getTime)
             ;
+        py::class_<Quaternion>(handle, "Quaternion")
+            .def(py::init<vector<double>, bool>())
+            .def("as_vector", &Quaternion::asVector)
+            ;
+        handle.def("euler_to_quat", &eulerToQuaternion);
 }
 
 int main(){

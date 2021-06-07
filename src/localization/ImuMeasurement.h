@@ -32,6 +32,8 @@ public:
 
     friend ostream& operator<<(ostream& out, const ImuMeasurement& m);
 
+    double getTime(){return this->time;}
+
     ImuMeasurement():accelerometer(3), compas(0), gyro(3), time(-1){};
     
     /**
@@ -80,13 +82,13 @@ public:
             throw -1;
         }    
     };
-
-    friend ostream& operator<<(ostream& out, const ImuMeasurement& m){
-        out << "{accel:" << m.accelerometer <<
-               ", comp:" << m.compas <<
-               ", gyro:" << m.gyro;
-        return out;
-    }
 };
+
+ostream& operator<<(ostream& out, const ImuMeasurement& m){
+    out << "{accel:" << m.accelerometer <<
+            ", comp:" << m.compas <<
+            ", gyro:" << m.gyro;
+    return out;
+}
 
 #endif

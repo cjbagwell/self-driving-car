@@ -662,20 +662,26 @@ class CameraManager(object):
             image.save_to_disk('_out/%08d' % image.frame)
 
 gnss_events = []
-loc_events  = []
+gt_events  = []
 imu_events  = []
 
 def gnss_callback(data, agent):
-    loc = agent.vehicle.get_location()
+    transform = agent.vehicle.get_transform()
+    loc = transform.location
+    rot = transform.rotation
+    vel = agent.vehicle.get_velocity()
     t = data.timestamp
-    loc_events.append((t, loc))
+    gt_events.append((t, loc, vel, rot))
     gnss_events.append(data)
 
 def imu_callback(data, agent):
-    loc = agent.vehicle.get_location()
+    transform = agent.vehicle.get_transform()
+    loc = transform.location
+    rot = transform.rotation
+    vel = agent.vehicle.get_velocity()
     t = data.timestamp
     imu_events.append(data)
-    loc_events.append((t, loc))
+    gt_events.append((t, loc, vel, rot))
 
 
 def write_data_file(f_name, data):
@@ -737,13 +743,26 @@ def create_data_files(gnss_es, imu_es, loc_es):
     locx = []
     locy = []
     locz = []
-    for t, event in loc_es:
+    velx = []
+    vely = []
+    velz = []
+    pitch= []
+    yaw  = []
+    roll = []
+
+    for t, loc, vel, rot in loc_es:
         loc_times.append(t)
-        locx.append(event.x)
-        locy.append(event.y)
-        locz.append(event.z)
-    location_data = zip(loc_times, locx, locy, locz)  
-    write_data_file("Location_data.txt", location_data)  
+        locx.append(loc.x)
+        locy.append(loc.y)
+        locz.append(loc.z)
+        velx.append(vel.x)
+        vely.append(vel.y)
+        velz.append(vel.z)
+        pitch.append(rot.pitch)
+        yaw.append(rot.yaw)
+        roll.append(rot.roll)
+    location_data = zip(loc_times, locx, locy, locz, velx, vely, velz, pitch, yaw, roll)  
+    write_data_file("GT_data.txt", location_data)  
     print("Finished writing data files")
 
 # ==============================================================================
@@ -954,7 +973,7 @@ def main():
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
         
-    create_data_files(gnss_events, imu_events, loc_events)
+    create_data_files(gnss_events, imu_events, gt_events)
 
 if __name__ == '__main__':
     main()

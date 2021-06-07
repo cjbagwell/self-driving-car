@@ -81,4 +81,5 @@ std::ostream& operator<<(std::ostream& out, const State& s){
         "pos:" << s.pos << 
         " vel:" << s.vel << 
         "rot:" << s.rot << "}";
+    return out;
 }
