@@ -6,12 +6,18 @@ gt_measurements  = ds_handler.get_gt_data()
 gt_times = []
 [gt_times.append(state.time) for state in gt_measurements]
 
-gt_index = gt_times.index(imu_measurements[10].get_time())
-init_pose = gt_measurements[gt_index]
-print(init_pose)
+gt_index = gt_times.index(imu_measurements[0].get_time())
+init_state = gt_measurements[gt_index]
+imu_var = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+print(init_state)
 
-initState = State()
 
+
+filter = EsEkf(init_state, [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+print(filter)
+
+newState = filter.run_step(imu_measurements[0], imu_var)
+print(newState)
 
 for m in imu_measurements:
     pass

@@ -26,9 +26,9 @@ using namespace std;
 class ImuMeasurement{
 private:
 public:
-    Row<double> accelerometer;
+    Col<double> accelerometer;
     double compas, time;
-    Row<double> gyro;
+    Col<double> gyro;
 
     friend ostream& operator<<(ostream& out, const ImuMeasurement& m);
 
@@ -44,9 +44,9 @@ public:
      * @param g gyroscope measurement vector
      * @param t time the measurement occured at
      */
-    ImuMeasurement(Row<double> a, 
+    ImuMeasurement(Col<double> a, 
                    double c, 
-                   Row<double> g,
+                   Col<double> g,
                    double t)
                    :
                    accelerometer(a),

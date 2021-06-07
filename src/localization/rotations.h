@@ -81,15 +81,17 @@ public:
         this->z = quaternionArray[3];
     }
     
-    Quaternion(const Row<double>& angles, const bool& isAxisAngles){
+    Quaternion(const Col<double>& angles, const bool& isAxisAngles){
+        cout << "in constructor" << endl;
         if(isAxisAngles){
+            cout << "in constructor isAxisAngles" << endl;
             double norm = arma::norm(angles);
             this->w = cos(norm);
             if(norm < exp10(-50)){
                 this->x = this->y = this->z = 0;
             }
             else{
-                Row<double> imag = angles / norm * sin(norm/2);
+                Col<double> imag = angles / norm * sin(norm/2);
                 this->x = imag[0];
                 this->y = imag[1];
                 this->z = imag[2];
@@ -125,12 +127,12 @@ public:
         // should be quat_mult_left?
         Col<double> v = {x, y, z};
         Mat<double> sumTerm = arma::zeros(4,4);
-        sumTerm.submat(0,1,0,3) = -v.col(0);
-        sumTerm.submat(1,0,3,0) = v.col(0);
+        sumTerm.submat(0,1,0,3) = -v.as_row();
+        sumTerm.submat(1,0,3,0) = v;
         sumTerm.submat(1,1,3,3) = skewSemetric(v);
         Mat<double> sigma = this->w * eye(4,4) + sumTerm;
-        Row<double> quatArr = sigma * Row<double>({q.w, q.x, q.y, q.z});
-        return Quaternion(quatArr);
+        Col<double> quatArr = sigma * Col<double>({q.w, q.x, q.y, q.z}); 
+        return Quaternion(quatArr.as_row());
     }
 
     Row<double> toAxisAngles(){
