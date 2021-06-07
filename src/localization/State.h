@@ -12,6 +12,7 @@
 #include<armadillo>
 #include "rotations.h"
 
+using namespace std;
 using namespace arma;
 
 class State{
@@ -51,6 +52,19 @@ public:
           frame(frame)
           {};
     
+    State(vector<double> pos,
+          vector<double> vel,
+          vector<double> rot,
+          double time,
+          int frame)
+          :
+          pos(pos),
+          vel(vel),
+          rot(rot),
+          time(time),
+          frame(frame)
+          {};
+
     double getSpeed(){
         return arma::norm(vel);
     }

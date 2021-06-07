@@ -35,11 +35,25 @@ public:
      */
     EsEKF(State initialState, arma::Row<double> initialVariance);
 
+    EsEKF(State initialState, vector<double> initialVariance);
+
     /**
      * @returns the current state of the vehicle.
      */
     State getCurrentState()const{return this->currState;}
     
+    /**
+     * @brief a simple way to convert from a vector<double> into Row<double>.
+     * This is used for the interface with python.  Note this may be temporary,
+     * but I am doing this with the expectation the conversion from list to vector
+     * and from vector to arma::Row is well efficient.
+     * 
+     * @param m 
+     * @param sensorVar 
+     * @return State 
+     */
+    State runStep(ImuMeasurement m, vector<double> sensorVar);
+
     /**
      * updates the state of the vehicle based on a new measurement from the
      * Inertial Measurement Unit (IMU).

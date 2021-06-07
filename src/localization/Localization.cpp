@@ -12,16 +12,17 @@
 // std includes
 #include<iostream>
 #include<ostream>
-#include<armadillo>
 
 // project includes
-// #include<pybind11/pybind11.h>
+#include<armadillo>
+#include<pybind11/pybind11.h>
+#include<pybind11/stl.h>
 #include "Localization.h"
 #include "ImuMeasurement.h"
 
 using namespace std;
 using namespace arma;
-// namespace py = pybind11;
+namespace py = pybind11;
 
 // ========================================================================
 // Global Functions and Variables
@@ -32,6 +33,21 @@ const arma::Col<double> G({0.0, 0.0, -9.81});
 // ========================================================================
 // EsEKF Implementation
 // ========================================================================
+
+EsEKF::EsEKF(State initialState, Row<double> initialVariance):currState(initialState){
+    this->currState = initialState;
+    this->pCov = diagmat(initialVariance);
+}
+
+EsEKF::EsEKF(State initialState, vector<double> initialVariance):currState(initialState){
+    this->currState = initialState;
+    this->pCov = diagmat(Row<double>(initialVariance));
+}
+
+State EsEKF::runStep(ImuMeasurement m, vector<double> sensorVar){
+    Row<double> sVar(sensorVar);
+    return this->runStep(m, sVar);
+}
 
 State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
     // 1. Update state with IMU measurement (motion model)
@@ -59,15 +75,32 @@ State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
     currState.rot = qCheck;
     currState.time= m.time;
     currState.frame= -1; /** TODO: need to figure out about frame from IMU measurement */
-}
 
-
-EsEKF::EsEKF(State initialState, Row<double> initialVariance):currState(initialState){
-    this->currState = initialState;
-    this->pCov = diagmat(initialVariance);
+    return State();
 }
 
 State EsEKF::runStep(const State &measurement, const Row<double> &sensorVar){
     /** TODO: implement this method */
+    return State();
 }
 
+// ========================================================================
+// Pybind11 implementation
+// ========================================================================
+
+PYBIND11_MODULE(py_localization, handle){
+        py::class_<EsEKF>(handle, "EsEkf")
+            .def(py::init<State, vector<double>>())
+            .def("run_step", py::overload_cast<ImuMeasurement, vector<double>>(&EsEKF::runStep))
+            ;
+        
+        py::class_<State>(handle, "State")
+            .def(py::init<>())
+            .def(py::init<vector<double>, vector<double>, vector<double>,double,int>())
+            ;
+}
+
+int main(){
+    cout << "Hello World!" << endl;
+    return 1;
+}

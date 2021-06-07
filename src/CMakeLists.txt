@@ -11,10 +11,16 @@ add_library(
     localization/Localization.cpp
 )
 
+target_include_directories(localization PUBLIC "${LIBS}/pybind11/include")
+
+pybind11_add_module(py_localization localization/Localization.cpp)
+
 target_link_libraries(
-    localization
+    py_localization
+    PRIVATE pybind11::embed
     armadillo
 )
+
 
 # target_include_directories(controller PUBLIC "${LIBS}/pybind11/include")
 
