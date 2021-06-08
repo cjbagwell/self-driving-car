@@ -96,9 +96,9 @@ public:
             }
         }
         else{ // is Euler angles
-            double roll = angles[0];
-            double pitch = angles[1];
-            double yaw = angles[2];
+            double roll = angles[2];
+            double pitch = angles[0];
+            double yaw = angles[1];
 
             double cy = cos(yaw / 2);
             double sy = sin(yaw / 2);
@@ -149,7 +149,7 @@ public:
     Mat<double> toRotMat(){
         Col<double> v({x, y, z});
         Row<double> vt = v.t();
-        return (w*w - dot(vt, v)) * eye(3,3) + 2*dot(v,vt) + 2*w*skewSemetric(v);
+        return (w*w - dot(vt,v)) * eye(3,3) + 2*v*vt + 2*w*skewSemetric(v);
     }
 
     Row<double> asArma(){

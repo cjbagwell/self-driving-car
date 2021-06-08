@@ -1,5 +1,5 @@
-from process_data import ds_handler
-from py_localization import EsEkf, ImuMeasurement, State
+from process_data import ds_handler #type:ignore
+from py_localization import EsEkf, ImuMeasurement, State #type:ignore
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -30,7 +30,7 @@ print("Finished!")
 print("num outputs: {}".format(len(outputs)))
 
 plt.figure(1)
-plt.plot(x, y)
+plt.plot(x, y, 'blue', x[0], y[0], 'r x')
 plt.draw()
 
 x = []

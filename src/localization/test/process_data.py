@@ -96,7 +96,7 @@ for ln in lns:
     elems = ln.split(',')
     elems = [float(elem) for elem in elems]
     imu_times.append(elems[0])
-    accel.append([elems[1], elems[2], elems[3]])
+    accel.append([elems[1]/1845, elems[2]/1845, elems[3]/1845])
     comp.append(elems[4])
     gyro.append([elems[5], elems[6], elems[7]])
 ds_handler.set_imu_data(imu_times, accel, comp, gyro)
