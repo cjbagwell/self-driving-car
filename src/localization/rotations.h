@@ -26,7 +26,8 @@
 using namespace arma;
 using namespace std;
 
-const double PI = 3.14159;
+const double PI = 3.14159265359;
+const double QUAT_EQUALS_TOLERANCE = 0.000001;
 
 /**
  * @brief Wraps the input angle to the range -PI and PI
@@ -35,9 +36,11 @@ const double PI = 3.14159;
  * @return double wrapped angle
  */
 double angleNormalise(double& angle){
-    if(angle <= -PI) angle += 2 * PI;
-    else if(angle > PI) angle -= 2 * PI;
-    return angle;
+    while(true){
+        if(angle <= -PI) angle += 2 * PI;
+        else if(angle > PI) angle -= 2 * PI;
+        else return angle;
+    }   
 }
 
 /**
@@ -72,6 +75,15 @@ private:
     double w, x, y, z;
 public:
     friend ostream& operator<<(ostream& out, const Quaternion& q);
+    bool operator==(const Quaternion& q2){
+        if((w - q2.w) < QUAT_EQUALS_TOLERANCE && 
+           (x - q2.x) < QUAT_EQUALS_TOLERANCE && 
+           (y - q2.y) < QUAT_EQUALS_TOLERANCE &&
+           (z - q2.z) < QUAT_EQUALS_TOLERANCE){
+            return true;
+        }
+        return false;
+    }
 
     Quaternion(double w=1, double x=0, double y=0, double z=0):w(w), x(x), y(y), z(z){};
     Quaternion(Row<double> quaternionArray){
@@ -96,9 +108,9 @@ public:
             }
         }
         else{ // is Euler angles
-            double roll = angles[2];
-            double pitch = angles[0];
-            double yaw = angles[1];
+            double pitch = angles[1];
+            double yaw = angles[2];
+            double roll = angles[0];
 
             double cy = cos(yaw / 2);
             double sy = sin(yaw / 2);
@@ -108,16 +120,16 @@ public:
             double sp = sin(pitch / 2);
 
             // Fixed frame
-            this->w = cr * cp * cy + sr * sp * sy;
-            this->x = sr * cp * cy - cr * cp * sy;
-            this->y = cr * sp * cy + sr * cp * sy;
-            this->z = cr * cp * sy - sr * sp * cy;
+            // this->w = cr * cp * cy + sr * sp * sy;
+            // this->x = sr * cp * cy - cr * cp * sy;
+            // this->y = cr * sp * cy + sr * cp * sy;
+            // this->z = cr * cp * sy - sr * sp * cy;
 
             // Rotating frame
-            // this->w = cr * cp * cy - sr * sp * sy;
-            // this->x = cr * sp * sy + sr * cp * cy;
-            // this->y = cr * sp * cy - sr * cp * sy;
-            // this->z = cr * cp * sy + sr * sp * cy;
+            this->w = cr * cp * cy - sr * sp * sy;
+            this->x = cr * sp * sy + sr * cp * cy;
+            this->y = cr * sp * cy - sr * cp * sy;
+            this->z = cr * cp * sy + sr * sp * cy;
         }
     }
 
