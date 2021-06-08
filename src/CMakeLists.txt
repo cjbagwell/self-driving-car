@@ -1,26 +1,13 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+enable_testing()
+add_subdirectory(localization)
+add_subdirectory(controller)
 # add_library(
 #     controller
 #     controller/Controller2D.h
 #     controller/Controller2D.cpp
 # )
-add_library(
-    localization
-    localization/Localization.h
-    localization/Localization.cpp
-)
-
-target_include_directories(localization PUBLIC "${LIBS}/pybind11/include")
-
-pybind11_add_module(py_localization localization/Localization.cpp)
-
-target_link_libraries(
-    py_localization
-    PRIVATE pybind11::embed
-    armadillo
-)
-
 
 # target_include_directories(controller PUBLIC "${LIBS}/pybind11/include")
 
@@ -33,4 +20,3 @@ target_link_libraries(
 # )
 
 
-include_directories(/usr/include/python3.8)

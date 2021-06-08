@@ -1,5 +1,5 @@
 /**
- * @file Localization.h
+ * @file EsEkf.h
  * @author C. Jordan Bagwell (cjbagwell@crimson.ua.edu)
  * @brief TODO: some stuff here
  * @version 0.1
@@ -20,8 +20,8 @@
 #include "State.h"
 #include "ImuMeasurement.h"
 
-#ifndef LOCALIZATION_H
-#define LOCALIZATION_H
+#ifndef ES_EKF_H
+#define ES_EKF_H
 
 class EsEKF{
 private:
@@ -75,4 +75,4 @@ public:
      */
     State runStep(const State &measurement, const arma::Row<double> &sensorVar);
 };
-#endif
+#endif /* ES_EKF_H */
