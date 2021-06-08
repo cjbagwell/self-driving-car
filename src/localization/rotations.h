@@ -82,9 +82,7 @@ public:
     }
     
     Quaternion(const Col<double>& angles, const bool& isAxisAngles){
-        cout << "in constructor" << endl;
         if(isAxisAngles){
-            cout << "in constructor isAxisAngles" << endl;
             double norm = arma::norm(angles);
             this->w = cos(norm);
             if(norm < exp10(-50)){

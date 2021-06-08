@@ -97,6 +97,7 @@ PYBIND11_MODULE(py_localization, handle){
         py::class_<State>(handle, "State")
             .def(py::init<>())
             .def(py::init<vector<double>, vector<double>, vector<double>,double,int>())
+            .def("get_position", &State::getPosition)
             .def_readwrite("time", &State::time)
             ;
 
