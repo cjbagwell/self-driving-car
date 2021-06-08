@@ -1,4 +1,6 @@
 include_directories(/usr/include/python3.8)
+include_directories(${LIBS}/**)
+add_subdirectory(test)
 
 add_library(localization
     EsEkf.h
