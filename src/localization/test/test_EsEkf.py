@@ -20,27 +20,33 @@ for m in imu_measurements:
     outputs.append(filter.run_step(m, imu_var).get_position())
 
 
-x = []
-y = []
+x_out = []
+y_out = []
 for out in outputs:
-    x.append(out[0])
-    y.append(out[1])
+    x_out.append(out[0])
+    y_out.append(out[1])
 
 print("Finished!")
 print("num outputs: {}".format(len(outputs)))
+t = ds_handler.gt_raw['time']
+x_gt = ds_handler.gt_raw['x']
+y_gt = ds_handler.gt_raw['y']
+z_gt = ds_handler.gt_raw['z']
+roll_gt = ds_handler.gt_raw['roll']
+pitch_gt = ds_handler.gt_raw['pitch']
+yaw_gt = ds_handler.gt_raw['yaw']
 
 plt.figure(1)
-plt.plot(x, y, 'blue', x[0], y[0], 'r x')
+plt.plot(x_gt, y_gt, 'blue', x_out, y_out, 'red', x_gt[0], y_gt[0], 'x')
+plt.xlabel("x position")
+plt.ylabel("y position")
+plt.title("Position")
+plt.legend(["ground truth", "estimated", "start"])
 plt.draw()
 
-x = []
-y = []
-for s in gt_measurements:
-    pos = s.get_position()
-    x.append(pos[0])
-    y.append(pos[1])
-
 plt.figure(2)
-plt.plot(x, y, 'blue', x[0], y[0], 'r x')
-plt.title("GT Data")
+plt.plot(t, yaw_gt, 'b--')
+plt.draw()
+
 plt.show()
+

@@ -26,6 +26,10 @@
 using namespace arma;
 using namespace std;
 
+
+// =============================================================================
+// Global Variables and Functions
+// =============================================================================
 const double PI = 3.14159265359;
 const double QUAT_EQUALS_TOLERANCE = 0.000001;
 
@@ -69,6 +73,9 @@ Mat<double> skewSemetric(Col<double> v){
                         {-v[1], v[0], 0}});
 }
 
+// =============================================================================
+// Quaternions
+// =============================================================================
 
 class Quaternion{
 private:
@@ -108,9 +115,9 @@ public:
             }
         }
         else{ // is Euler angles
+            double roll = angles[0];
             double pitch = angles[1];
             double yaw = angles[2];
-            double roll = angles[0];
 
             double cy = cos(yaw / 2);
             double sy = sin(yaw / 2);
@@ -182,7 +189,7 @@ public:
         return;
     }
     
-    Quaternion getInvers(){
+    Quaternion getInverse(){
         double norm = arma::norm(this->asArma());
         return Quaternion(this->asArma() / norm);
     }

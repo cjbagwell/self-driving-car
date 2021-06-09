@@ -18,6 +18,7 @@ class DatasetHandler:
         self.gnss_data = {}
         self.imu_data = []
         self.gt_data = []
+        self.gt_raw = {}
     
     def set_gnss_data(self, ts, lats, lons, alts, xs, ys):
         self.gnss_data["times"] = ts
@@ -32,11 +33,30 @@ class DatasetHandler:
             self.imu_data.append(loc.ImuMeasurement(a, c, g, t))
 
     def set_gt_data(self, ts, locs, vels, rots):
+        xs = []
+        ys = []
+        zs = []
+        roll = []
+        pitch = []
+        yaw = []
         self.gt_data = []
         for t, pos, vel, rot in zip(ts, locs, vels, rots):
             quat = loc.euler_to_quat(rot)
             state = loc.State(pos, vel, quat.as_vector(), t, -1)
             self.gt_data.append(state)
+            xs.append(pos[0])
+            ys.append(pos[1])
+            zs.append(pos[2])
+            roll.append(rot[0])                      
+            pitch.append(rot[1])
+            yaw.append(rot[2])
+        self.gt_raw['time'] = ts
+        self.gt_raw['x'] = xs
+        self.gt_raw['y'] = ys
+        self.gt_raw['z'] = zs
+        self.gt_raw['roll'] = roll
+        self.gt_raw['pitch'] = pitch
+        self.gt_raw['yaw'] = yaw
     
     def get_gnss_data(self):
         return self.gnss_data["times"], self.gnss_data["lats"], self.gnss_data["lons"], \
@@ -122,9 +142,25 @@ for ln in lns:
     rots.append([elems[7], elems[8], elems[9]])
 ds_handler.set_gt_data(gt_times, locs, vels, rots)
 
+
+
+
+
 ##################################################
 # Visualize Data
 ##################################################
+# xs = []
+# ys = []
+# zs = []
+# for x,y,z in accel:
+#     xs.append(x)
+#     ys.append(y)
+#     zs.append(z)
+
+# print(xs)
+# plt.plot(imu_times, xs, 'b', imu_times, ys, 'r')
+# plt.show()
+
 # gnss_times, lats, lons, gnss_xs, gnss_ys = ds_handler.get_gnss_data()
 
 # plt.figure(1)

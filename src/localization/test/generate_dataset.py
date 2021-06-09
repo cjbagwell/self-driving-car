@@ -761,7 +761,7 @@ def create_data_files(gnss_es, imu_es, loc_es):
         pitch.append(rot.pitch)
         yaw.append(rot.yaw)
         roll.append(rot.roll)
-    location_data = zip(loc_times, locx, locy, locz, velx, vely, velz, pitch, yaw, roll)  
+    location_data = zip(loc_times, locx, locy, locz, velx, vely, velz, roll, pitch, yaw)  
     write_data_file("GT_data.txt", location_data)  
     print("Finished writing data files")
 
@@ -866,6 +866,7 @@ def game_loop(args):
                 world.player.apply_control(control)
             else:
                 agent.update_information()
+                t1 = agent.vehicle.get_transform()
 
                 world.tick(clock)
                 world.render(display)

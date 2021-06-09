@@ -55,11 +55,22 @@ State EsEKF::runStep(ImuMeasurement m, vector<double> sensorVar){
 State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
     // 1. Update state with IMU measurement (motion model)
     double dt = m.time - currState.time;
-    Mat<double> rotMat = currState.rot.toRotMat(); /** TODO: check this function*/
+    cout << "t: " << m.time << endl;
+    Mat<double> rotMat = currState.rot.toRotMat();
+    cout << "currPos:\n" << currState.pos << endl;
+    cout << "currVel:\n" << currState.vel << endl;
+    cout << "currQuat: " << currState.rot << endl;
+    cout << "rotMat:\n" << rotMat << endl;
+
     Col<double> pCheck = currState.pos + dt * currState.vel + ((dt*dt)/2) * (rotMat * m.accelerometer + G);
     Col<double> vCheck = currState.vel + dt * (rotMat * m.accelerometer + G);
     Quaternion  qChange= Quaternion(m.gyro, true);
     Quaternion  qCheck = currState.rot * qChange; // order right for quat mult?
+    cout << "pCheck:\n" << pCheck << endl;
+    cout << "vCheck:\n" << vCheck << endl;
+    cout << "qChange: " << qChange << endl;
+    cout << "qCheck: " << qCheck << endl;
+    cout << "\n\n" << endl;
     qCheck.normalize();
     // 2. Linearize the Motion Model with Jacobians
     Mat<double> fJac = eye(9,9);
