@@ -11,10 +11,18 @@ using namespace std;
 using namespace arma;
 
 bool isEqual(const Mat<double>& m1, const Mat<double>& m2){
-    if(arma::max(arma::max(arma::abs(m1 - m2)) < 0.00001)){
+    if(arma::max(arma::max(arma::abs(m1 - m2)) < 0.000001)){
         return true;
     }
     return false;
+}
+
+bool isEqual(const Col<double>& c1, const Col<double>& c2){
+    Col<double> diff = c1 - c2;
+    diff = angleNormalise(diff);
+    double maxDiff = arma::max(arma::abs(diff));
+    cout << "maxDiff: " << maxDiff << endl;
+    return maxDiff < 0.000001 || (maxDiff - PI) < 0.000001 || (maxDiff + PI) < 0.000001;
 }
 
 TEST(LocalizationTests, RotationTests){
@@ -26,8 +34,8 @@ TEST(LocalizationTests, RotationTests){
     ASSERT_TRUE(angleNormalise(ang2) > -PI);
     ASSERT_TRUE(angleNormalise(ang3) < PI);
     
-    Row<double> angs = {ang1, ang2, ang3};
-    Row<double> outAngs = angleNormalise(angs);
+    Col<double> angs = {ang1, ang2, ang3};
+    Col<double> outAngs = angleNormalise(angs);
     bool isCorrect = true;
     for(auto ang : outAngs){
         if(ang < -PI || ang > PI){
@@ -58,7 +66,7 @@ TEST(LocalizationTests, RotationTests){
     ASSERT_TRUE(testQuat == testQuat2);
     ASSERT_TRUE(testQuat == testQuat3);
 
-    // Test Angles Quaternion Constructors
+    // Test Euler Angles Quaternions
     Col<double> eAngles({0, 0, 0}); // Euler Angles
     Quaternion eQuat(eAngles, false);
     ASSERT_TRUE(testQuat == eQuat) << eQuat;
@@ -67,16 +75,39 @@ TEST(LocalizationTests, RotationTests){
     eQuat = Quaternion(eAngles, false);
     testQuat = Quaternion(sqrt(2)/2, sqrt(2)/2, 0, 0);
     EXPECT_TRUE(testQuat == eQuat) << "90 deg x rotation -- expected:" << testQuat << "\nwas:" << eQuat;
+    EXPECT_TRUE(isEqual(eAngles, eQuat.toEulerAngles())) << "x rot -> to eAngles\nexpected:" << eAngles << "\nwas:" << eQuat.toEulerAngles();
 
     eAngles = Col<double> ({0, PI/2, 0});
     eQuat = Quaternion(eAngles, false);
     testQuat = Quaternion(sqrt(2)/2, 0, sqrt(2)/2, 0);
     EXPECT_TRUE(testQuat == eQuat) << "90 deg y rotation -- expected:" << testQuat << "\nwas:" << eQuat;
+    EXPECT_TRUE(isEqual(eAngles, eQuat.toEulerAngles())) << "y rot -> to eAngles\nexpected:" << eAngles << "\nwas:" << eQuat.toEulerAngles();
 
     eAngles = Col<double>({0, 0, PI/2});
     eQuat = Quaternion(eAngles, false);
     testQuat = Quaternion(sqrt(2)/2, 0, 0, sqrt(2)/2);
     EXPECT_TRUE(testQuat == eQuat) << "90 deg z rotation -- expected:" << testQuat << "\nwas:" << eQuat;
+    EXPECT_TRUE(isEqual(eAngles, eQuat.toEulerAngles())) << "z rot -> to eAngles\nexpected:" << eAngles << "\nwas:" << eQuat.toEulerAngles();
 
-    
-}
+    // Test Axis Angles Quaternions
+    Col<double> aAngles = Col<double>({PI/2, 0, 0});
+    Quaternion aQuat(aAngles, true);
+    testQuat = Quaternion(sqrt(2)/2, sqrt(2)/2, 0, 0);
+    EXPECT_TRUE(testQuat == aQuat) << "90 deg x rotation -- expected:" << testQuat << "\nwas:" << aQuat;
+    EXPECT_TRUE(isEqual(aAngles, aQuat.toAxisAngles())) << "x rot -> to aAngles\nexpected:" << aAngles << "\nwas:" << aQuat.toAxisAngles();
+
+    aAngles = Col<double>({0, PI/2, 0});
+    aQuat = Quaternion(aAngles, true);
+    testQuat = Quaternion(sqrt(2)/2, 0, sqrt(2)/2, 0);
+    EXPECT_TRUE(testQuat == aQuat) << "90 deg y rotation -- expected:" << testQuat << "\nwas:" << aQuat;
+    EXPECT_TRUE(isEqual(aAngles, aQuat.toAxisAngles())) << "y rot -> to aAngles\nexpected:" << aAngles << "\nwas:" << aQuat.toAxisAngles();
+
+
+    aAngles = Col<double>({0, 0, PI/2});
+    aQuat = Quaternion(aAngles, true);
+    testQuat = Quaternion(sqrt(2)/2, 0, 0, sqrt(2)/2);
+    EXPECT_TRUE(testQuat == aQuat) << "90 deg z rotation -- expected:" << testQuat << "\nwas:" << aQuat;
+    EXPECT_TRUE(isEqual(aAngles, aQuat.toAxisAngles())) << "z rot -> to aAngles\nexpected:" << aAngles << "\nwas:" << aQuat.toAxisAngles();
+
+
+}    

@@ -47,14 +47,14 @@ double angleNormalise(double& angle){
  * @brief TODO: some stuff here
  * 
  * @param angles 
- * @return Row<double> 
+ * @return Col<double> 
  */
-Row<double> angleNormalise(Row<double> angles){
+Col<double> angleNormalise(Col<double> angles){
     std::vector<double> tmp;
     for(auto angle: angles){
         tmp.push_back(angleNormalise(angle));
     }
-    return Row<double>(tmp);
+    return Col<double>(tmp);
 }
 
 /**
@@ -96,7 +96,7 @@ public:
     Quaternion(const Col<double>& angles, const bool& isAxisAngles){
         if(isAxisAngles){
             double norm = arma::norm(angles);
-            this->w = cos(norm);
+            this->w = cos(norm/2);
             if(norm < exp10(-50)){
                 this->x = this->y = this->z = 0;
             }
@@ -145,17 +145,18 @@ public:
         return Quaternion(quatArr.as_row());
     }
 
-    Row<double> toAxisAngles(){
+    Col<double> toAxisAngles(){
         double t = 2 * acos(std::max(-1.0, std::min(this->w, 1.0)));
-        Row<double> angles = t * Row<double>({x, y, z});
-        return angles;
+        Col<double> angles = t * Col<double>({x, y, z});
+        return angleNormalise(angles);
     }
     
-    Row<double> toEulerAngles(){
+    Col<double> toEulerAngles(){
         double roll  = atan2(2 * (w*x + y*z), 1 - 2*(x*x + y*y));
         double pitch = asin(2 * (w*y - z*x));
         double yaw   = atan2(2 * (w*z + x*y), 1 - 2 * (y*y + z*z));
-        return Row<double>({roll, pitch, yaw});
+        Col<double> eAngles({roll, pitch, yaw});
+        return angleNormalise(eAngles);
     }
 
     Mat<double> toRotMat(){
