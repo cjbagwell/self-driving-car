@@ -61,7 +61,7 @@ State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
 
     Col<double> pCheck = currState.pos + dt * currState.vel + ((dt*dt)/2) * (rotMat * m.accelerometer + G);
     Col<double> vCheck = currState.vel + dt * (rotMat * m.accelerometer + G);
-    Quaternion  qChange= Quaternion(m.gyro * dt, true);
+    Quaternion  qChange= Quaternion(m.gyro * dt, false);
     Quaternion  qCheck = currState.rot * qChange; // order right for quat mult?
     // qCheck.normalize();
 
@@ -120,6 +120,7 @@ PYBIND11_MODULE(py_localization, handle){
             .def(py::init<>())
             .def(py::init<vector<double>, vector<double>, vector<double>,double,int>())
             .def("get_position", &State::getPosition)
+            .def("get_velocity", &State::getVelocity)
             .def_readwrite("time", &State::time)
             .def_readwrite("rot", &State::rot)
             ;

@@ -666,20 +666,24 @@ gt_events  = []
 imu_events  = []
 
 def gnss_callback(data, agent):
+    t = data.timestamp
+    if t < 5:
+        return
     transform = agent.vehicle.get_transform()
     loc = transform.location
     rot = transform.rotation
     vel = agent.vehicle.get_velocity()
-    t = data.timestamp
     gt_events.append((t, loc, vel, rot))
     gnss_events.append(data)
 
 def imu_callback(data, agent):
+    t = data.timestamp
+    if t < 5:
+        return
     transform = agent.vehicle.get_transform()
     loc = transform.location
     rot = transform.rotation
     vel = agent.vehicle.get_velocity()
-    t = data.timestamp
     imu_events.append(data)
     gt_events.append((t, loc, vel, rot))
 

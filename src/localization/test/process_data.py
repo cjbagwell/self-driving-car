@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import py_localization as loc
+import py_localization as loc #type:ignore 
 
 # helper functions
 def latlon2position(lat, lon):
@@ -20,6 +20,7 @@ class DatasetHandler:
     def __init__(self):
         self.gnss_data = {}
         self.imu_data = []
+        self.imu_raw = {}
         self.gt_data = []
         self.gt_raw = {}
     
@@ -32,13 +33,42 @@ class DatasetHandler:
     
     def set_imu_data(self, ts, accel, comp, gyro):
         self.imu_data = []
+        time = []
+        accel_x = []
+        accel_y = []
+        accel_z = []
+        compas = []
+        gyro_x = []
+        gyro_y = []
+        gyro_z = []
+
         for t, a, c, g in zip(ts, accel, comp, gyro):
             self.imu_data.append(loc.ImuMeasurement(a, c, g, t))
+            time.append(t)
+            accel_x.append(a[0])
+            accel_y.append(a[1])
+            accel_z.append(a[2])
+            compas.append(c)
+            gyro_x.append(g[0])
+            gyro_y.append(g[1])
+            gyro_z.append(g[2])
+        self.imu_raw['time'] = time
+        self.imu_raw['accel_x'] = accel_x
+        self.imu_raw['accel_y'] = accel_y
+        self.imu_raw['accel_z'] = accel_z
+        self.imu_raw['compas'] = compas
+        self.imu_raw['gyro_x'] = gyro_x
+        self.imu_raw['gyro_y'] = gyro_y
+        self.imu_raw['gyro_z'] = gyro_z
+
 
     def set_gt_data(self, ts, locs, vels, rots):
         xs = []
         ys = []
         zs = []
+        vxs = []
+        vys = []
+        vzs = []
         roll = []
         pitch = []
         yaw = []
@@ -50,6 +80,9 @@ class DatasetHandler:
             xs.append(pos[0])
             ys.append(pos[1])
             zs.append(pos[2])
+            vxs.append(vel[0])
+            vys.append(vel[1])
+            vzs.append(vel[2])
             roll.append(rot[0])                      
             pitch.append(rot[1])
             yaw.append(rot[2])
@@ -57,6 +90,9 @@ class DatasetHandler:
         self.gt_raw['x'] = xs
         self.gt_raw['y'] = ys
         self.gt_raw['z'] = zs
+        self.gt_raw['vx'] = vxs
+        self.gt_raw['vy'] = vys
+        self.gt_raw['vz'] = vzs
         self.gt_raw['roll'] = roll
         self.gt_raw['pitch'] = pitch
         self.gt_raw['yaw'] = yaw
@@ -119,7 +155,7 @@ for ln in lns:
     elems = ln.split(',')
     elems = [float(elem) for elem in elems]
     imu_times.append(elems[0])
-    accel.append([elems[1]/1845, elems[2]/1845, elems[3]/1845])
+    accel.append([elems[1], elems[2], elems[3]])
     comp.append(elems[4])
     gyro.append([elems[5], elems[6], elems[7]])
 ds_handler.set_imu_data(imu_times, accel, comp, gyro)

@@ -75,6 +75,7 @@ public:
     }
 
     vector<double> getPosition(){return {pos[0], pos[1], pos[2]};}
+    vector<double> getVelocity(){return {vel[0], vel[1], vel[2]};}
 };
 
 std::ostream& operator<<(std::ostream& out, const State& s){
