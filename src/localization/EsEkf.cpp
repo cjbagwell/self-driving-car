@@ -19,6 +19,7 @@
 #include<pybind11/stl.h>
 #include "EsEkf.h"
 #include "ImuMeasurement.h"
+#include "rotations.h"
 
 using namespace std;
 using namespace arma;
@@ -111,6 +112,7 @@ PYBIND11_MODULE(py_localization, handle){
             .def(py::init<vector<double>, vector<double>, vector<double>,double,int>())
             .def("get_position", &State::getPosition)
             .def_readwrite("time", &State::time)
+            .def_readwrite("rot", &State::rot)
             ;
 
         py::class_<ImuMeasurement>(handle, "ImuMeasurement")
@@ -123,6 +125,7 @@ PYBIND11_MODULE(py_localization, handle){
             .def("as_vector", &Quaternion::asVector)
             ;
         handle.def("euler_to_quat", &eulerToQuaternion);
+        handle.def("quat_to_euler", &quaternionToEuler);
 }
 
 int main(){

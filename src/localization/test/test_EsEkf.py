@@ -1,5 +1,5 @@
 from process_data import ds_handler #type:ignore
-from py_localization import EsEkf, ImuMeasurement, State #type:ignore
+from py_localization import EsEkf, ImuMeasurement, State, quat_to_euler #type:ignore
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -17,14 +17,23 @@ print(filter)
 
 outputs = []
 for m in imu_measurements:
-    outputs.append(filter.run_step(m, imu_var).get_position())
+    outputs.append(filter.run_step(m, imu_var))
 
-
+t_out = []
 x_out = []
 y_out = []
+roll_out = []
+pitch_out = []
+yaw_out = []
 for out in outputs:
-    x_out.append(out[0])
-    y_out.append(out[1])
+    t_out.append(out.time)
+    x_out.append(out.get_position()[0])
+    y_out.append(out.get_position()[1])
+    e_angles = quat_to_euler(out.rot)
+    roll_out.append(e_angles[0])
+    pitch_out.append(e_angles[1])
+    yaw_out.append(e_angles[2])
+
 
 print("Finished!")
 print("num outputs: {}".format(len(outputs)))
@@ -45,7 +54,43 @@ plt.legend(["ground truth", "estimated", "start"])
 plt.draw()
 
 plt.figure(2)
-plt.plot(t, yaw_gt, 'b--')
+plt.plot(t, yaw_gt, 'b--', t_out, yaw_out, 'r')
+plt.legend(["ground truth","estimated"])
+plt.title("Yaw")
+plt.xlabel("time")
+plt.ylabel("rad")
+plt.draw()
+
+plt.figure(3)
+plt.plot(t, roll_gt, 'b--', t_out, roll_out, 'r')
+plt.legend(["ground truth","estimated"])
+plt.title("Roll")
+plt.xlabel("time")
+plt.ylabel("rad")
+plt.draw()
+
+plt.figure(4)
+plt.plot(t, pitch_gt, 'b--', t_out, pitch_out, 'r')
+plt.legend(["ground truth","estimated"])
+plt.title("Pitch")
+plt.xlabel("time")
+plt.ylabel("rad")
+plt.draw()
+
+plt.figure(5)
+plt.plot(t, x_gt, 'b--', t_out, x_out, 'r')
+plt.legend(["ground truth","estimated"])
+plt.title("X vs Time")
+plt.xlabel("time")
+plt.ylabel("x position")
+plt.draw()
+
+plt.figure(6)
+plt.plot(t, y_gt, 'b--', t_out, y_out, 'r')
+plt.legend(["ground truth","estimated"])
+plt.title("Y vs Time")
+plt.xlabel("time")
+plt.ylabel("y position")
 plt.draw()
 
 plt.show()

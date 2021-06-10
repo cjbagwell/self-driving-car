@@ -10,6 +10,9 @@ def latlon2position(lat, lon):
     y = -lat * r_earth
     return x, y
 
+def deg2rad(angle):
+    return angle * 3.14159 / 180
+
 ##################################################
 # Dataset Handler
 ##################################################
@@ -139,7 +142,7 @@ for ln in lns:
     gt_times.append(elems[0])
     locs.append([elems[1], elems[2], elems[3]])
     vels.append([elems[4], elems[5], elems[6]])
-    rots.append([elems[7], elems[8], elems[9]])
+    rots.append([deg2rad(elems[7]), deg2rad(elems[8]), deg2rad(elems[9])])
 ds_handler.set_gt_data(gt_times, locs, vels, rots)
 
 

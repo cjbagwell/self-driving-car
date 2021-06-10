@@ -206,4 +206,10 @@ Quaternion eulerToQuaternion(vector<double> angles){
     return retQuat;
 }
 
+vector<double> quaternionToEuler(Quaternion q){
+    Col<double> out = q.toEulerAngles();
+    vector<double> ret = {out[0], out[1], out[2]};
+    return ret;
+}
+
 #endif
