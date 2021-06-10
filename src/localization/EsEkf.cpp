@@ -39,14 +39,15 @@ EsEKF::EsEKF(State initialState, Row<double> initialVariance):currState(initialS
     this->currState = initialState;
     this->pCov = diagmat(initialVariance);
     this->qCov = diagmat(Row<double>({0.1, 0.1, 0.1, 0.1, 0.1, 0.1}));
+    this->lJac = Mat<double>(9,6, fill::zeros);
+    lJac.submat(3,0,8,5) = eye(6,6);
 }
 
-EsEKF::EsEKF(State initialState, vector<double> initialVariance):currState(initialState){
-    this->currState = initialState;
-    this->pCov = diagmat(Row<double>(initialVariance));
-    this->qCov = diagmat(Row<double>({0.1, 0.1, 0.1, 0.1, 0.1, 0.1}));
-
-}
+EsEKF::EsEKF(State initialState, 
+             vector<double> initialVariance)
+             :
+             EsEKF(initialState, Row<double>(initialVariance))
+             {}
 
 State EsEKF::runStep(ImuMeasurement m, vector<double> sensorVar){
     Row<double> sVar(sensorVar);
@@ -56,33 +57,41 @@ State EsEKF::runStep(ImuMeasurement m, vector<double> sensorVar){
 State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
     // 1. Update state with IMU measurement (motion model)
     double dt = m.time - currState.time;
-    cout << "t: " << m.time << endl;
     Mat<double> rotMat = currState.rot.toRotMat();
-    cout << "currPos:\n" << currState.pos << endl;
-    cout << "currVel:\n" << currState.vel << endl;
-    cout << "currQuat: " << currState.rot << endl;
-    cout << "rotMat:\n" << rotMat << endl;
 
     Col<double> pCheck = currState.pos + dt * currState.vel + ((dt*dt)/2) * (rotMat * m.accelerometer + G);
     Col<double> vCheck = currState.vel + dt * (rotMat * m.accelerometer + G);
-    Quaternion  qChange= Quaternion(m.gyro, true);
+    Quaternion  qChange= Quaternion(m.gyro * dt, true);
     Quaternion  qCheck = currState.rot * qChange; // order right for quat mult?
-    cout << "pCheck:\n" << pCheck << endl;
-    cout << "vCheck:\n" << vCheck << endl;
-    cout << "qChange: " << qChange << endl;
-    cout << "qCheck: " << qCheck << endl;
-    cout << "\n\n" << endl;
-    qCheck.normalize();
+    // qCheck.normalize();
+
     // 2. Linearize the Motion Model with Jacobians
     Mat<double> fJac = eye(9,9);
     fJac.submat(0,3,2,5) = eye(3,3) * dt; // not sure about submatrix intexing...
     fJac.submat(3,6,5,8) = -skewSemetric(rotMat * m.accelerometer) * dt;
-    Mat<double> lJac = arma::zeros(9,6);
-    lJac.submat(3,0,8,5) = eye(6,6);
+    
     // 3. Propogate Uncertainty
     Mat<double> var = diagmat(sensorVar) * dt*dt;
     qCov = qCov * var;
     pCov = fJac * pCov * fJac.t() + lJac * qCov * lJac.t();
+    
+    // Debugging Info
+    cout << "======================================================================\n";
+    cout << "t: " << m.time << "\t t: " << m.time << "\n";
+    cout << "currPos:\n"<< currState.pos << "\n";
+    cout << "currVel:\n"<< currState.vel << "\n";
+    cout << "currQuat: "<< currState.rot << "\n";
+    cout << "rotMat:\n" << rotMat   << "\n";
+    cout << "pCheck:\n" << pCheck   << "\n";
+    cout << "vCheck:\n" << vCheck   << "\n";
+    cout << "qChange: " << qChange  << "\n";
+    cout << "qCheck: "  << qCheck   << "\n";
+    cout << "fJac:\n"   << fJac     << "\n";
+    cout << "lJac:\n"   << lJac     << "\n";
+    cout << "qCov:\n"   << qCov     << "\n";
+    cout << "pCov:\n"   << pCov     << "\n";
+    cout << endl;
+    
     // 4. Update Filter State
     currState.pos = pCheck;
     currState.vel = vCheck;

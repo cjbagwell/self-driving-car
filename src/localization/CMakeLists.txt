@@ -3,6 +3,11 @@ include_directories(${LIBS}/**)
 add_subdirectory(test)
 enable_testing()
 
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 14)
+
 add_library(localization
     EsEkf.h
     EsEkf.cpp

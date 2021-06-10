@@ -149,7 +149,9 @@ public:
         sumTerm.submat(1,1,3,3) = skewSemetric(v);
         Mat<double> sigma = this->w * eye(4,4) + sumTerm;
         Col<double> quatArr = sigma * Col<double>({q.w, q.x, q.y, q.z}); 
-        return Quaternion(quatArr.as_row());
+        Quaternion retQuat(quatArr.as_row());
+        // retQuat.normalize();
+        return retQuat;
     }
 
     Col<double> toAxisAngles(){
@@ -180,13 +182,13 @@ public:
         return vector<double>({w, x, y, z});
     }
     
-    void normalize(){
+    Quaternion normalize(){
         double norm = arma::norm(this->asArma());
         this->w = this->w / norm;
         this->x = this->x / norm;
         this->y = this->y / norm;
         this->z = this->z / norm;
-        return;
+        return *this;
     }
     
     Quaternion getInverse(){
