@@ -20,6 +20,7 @@
 #include "EsEkf.h"
 #include "ImuMeasurement.h"
 #include "rotations.h"
+#include "GnssMeasurement.h"
 
 using namespace std;
 using namespace arma;
@@ -49,7 +50,7 @@ EsEKF::EsEKF(State initialState,
              EsEKF(initialState, Row<double>(initialVariance))
              {}
 
-State EsEKF::runStep(ImuMeasurement m, vector<double> sensorVar){
+State EsEKF::runStep(ImuMeasurement &m, vector<double> sensorVar){
     Row<double> sVar(sensorVar);
     return this->runStep(m, sVar);
 }
@@ -101,9 +102,30 @@ State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
     return this->currState;
 }
 
-State EsEKF::runStep(const State &measurement, const Row<double> &sensorVar){
-    /** TODO: implement this method */
-    return State();
+
+
+State EsEKF::runStep(GnssMeasurement &m, Row<double> &sensorVar){
+    // Compute Jacobians
+    Mat<double> hJac(3,9, fill::zeros);
+    hJac.submat(0, 0, 2, 2) = eye(3,3);
+    Mat<double> rJac = diagmat(sensorVar);
+    
+    // Compute Kalman Gain
+    Mat<double> k = pCov * hJac * inv(hJac * pCov * hJac.t() + rJac);
+
+    // Compute Error State
+    Col<double> yMeas = m.getLocation();
+    Col<double> xErr = k * (yMeas - currState.pos);
+
+    // Correct Predicted State
+    currState.pos = currState.pos + xErr.subvec(0,2);
+    currState.vel = currState.vel + xErr.subvec(3, 5);
+    currState.rot = currState.rot * Quaternion(xErr.subvec(6, 8), false);
+
+    // Update Covariance
+    pCov = (eye(9,9) - k * hJac) * pCov;
+
+    return currState;
 }
 
 // ========================================================================
@@ -113,7 +135,8 @@ State EsEKF::runStep(const State &measurement, const Row<double> &sensorVar){
 PYBIND11_MODULE(py_localization, handle){
         py::class_<EsEKF>(handle, "EsEkf")
             .def(py::init<State, vector<double>>())
-            .def("run_step", py::overload_cast<ImuMeasurement, vector<double>>(&EsEKF::runStep))
+            .def("run_step", py::overload_cast<ImuMeasurement&, vector<double>>(&EsEKF::runStep))
+            .def("run_step", py::overload_cast<GnssMeasurement&, vector<double>>(&EsEKF::runStep))
             ;
         
         py::class_<State>(handle, "State")
@@ -136,6 +159,15 @@ PYBIND11_MODULE(py_localization, handle){
             ;
         handle.def("euler_to_quat", &eulerToQuaternion);
         handle.def("quat_to_euler", &quaternionToEuler);
+
+        py::class_<GnssMeasurement>(handle, "GnssMeasurement")
+            .def(py::init<int, double, double, double, double>())
+            .def("get_location", &GnssMeasurement::getLocation)
+            .def_readonly("frame", &GnssMeasurement::frame)
+            .def_readonly("t", &GnssMeasurement::frame)
+            .def_readonly("alt", &GnssMeasurement::frame)
+            .def_readonly("lat", &GnssMeasurement::frame)
+            .def_readonly("lon", &GnssMeasurement::frame);
 }
 
 int main(){

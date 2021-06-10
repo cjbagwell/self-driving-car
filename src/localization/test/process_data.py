@@ -18,18 +18,23 @@ def deg2rad(angle):
 ##################################################
 class DatasetHandler:
     def __init__(self):
-        self.gnss_data = {}
+        self.gnss_raw = {}
+        self.gnss_data = []
         self.imu_data = []
         self.imu_raw = {}
         self.gt_data = []
         self.gt_raw = {}
     
     def set_gnss_data(self, ts, lats, lons, alts, xs, ys):
-        self.gnss_data["times"] = ts
-        self.gnss_data["lats"] = lats
-        self.gnss_data["lons"] = lons
-        self.gnss_data["xs"] = xs
-        self.gnss_data["ys"] = ys
+        self.gnss_raw["times"] = ts
+        self.gnss_raw["lats"] = lats
+        self.gnss_raw["lons"] = lons
+        self.gnss_raw["xs"] = xs
+        self.gnss_raw["ys"] = ys
+
+        self.gnss_data = []
+        for t, lat, lon, alt in zip(ts, lats, lons, alts):
+            self.gnss_data.append(loc.GnssMeasurement(-1, t, alt, lat, lon))
     
     def set_imu_data(self, ts, accel, comp, gyro):
         self.imu_data = []
@@ -97,14 +102,12 @@ class DatasetHandler:
         self.gt_raw['pitch'] = pitch
         self.gt_raw['yaw'] = yaw
     
-    def get_gnss_data(self):
-        return self.gnss_data["times"], self.gnss_data["lats"], self.gnss_data["lons"], \
-            self.gnss_data["xs"], self.gnss_data["ys"]
-
-    def get_imu_data(self):
+    def get_gnss_measurements(self):
+        return self.gnss_data
+    def get_imu_measurements(self):
         return self.imu_data
 
-    def get_gt_data(self):
+    def get_gt_measurements(self):
         return self.gt_data
 
 ds_handler = DatasetHandler()

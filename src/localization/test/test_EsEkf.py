@@ -3,21 +3,32 @@ from py_localization import EsEkf, ImuMeasurement, State, quat_to_euler #type:ig
 import numpy as np
 from matplotlib import pyplot as plt
 
-imu_measurements = ds_handler.get_imu_data()
-gt_measurements  = ds_handler.get_gt_data()
+imu_measurements = ds_handler.get_imu_measurements()
+gnss_measurements  = ds_handler.get_gnss_measurements()
+gt_measurements  = ds_handler.get_gt_measurements()
 gt_times = []
 [gt_times.append(state.time) for state in gt_measurements]
 
 gt_index = gt_times.index(imu_measurements[0].get_time())
 init_state = gt_measurements[gt_index]
 imu_var = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+gnss_var = [0.5, 0.5, 0.5]
 
 filter = EsEkf(init_state, [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 print(filter)
 
 outputs = []
-for m in imu_measurements:
-    outputs.append(filter.run_step(m, imu_var))
+gnss_index = 0
+for i in range(len(imu_measurements)):
+    out = filter.run_step(imu_measurements[i], imu_var)
+
+    # for j in range(gnss_index, len(gnss_measurements)):
+    #     if gnss_measurements[j].t == imu_measurements[i].get_time():
+    #         out = filter.run_step(gnss_measurements[j], gnss_var)
+    #         gnss_index = j + 1
+    outputs.append(out)
+
+
 
 print("Finished!")
 print("num outputs: {}".format(len(outputs)))
