@@ -15,7 +15,7 @@
 #define GNSS_MEASUREMENT_H
 
 #include<armadillo>
-const double RADIUS_EARTH = 6.371 * exp10(6);
+const double RADIUS_EARTH = 6.371 * 6000000;
 
 class GnssMeasurement{
 public:
@@ -38,9 +38,9 @@ public:
 
     arma::Col<double> getLocation(){
         return arma::Col<double>({
-            (lon - 8)*RADIUS_EARTH,
-            -(lat - 49)*RADIUS_EARTH,
-            alt
+            lon*RADIUS_EARTH,
+            -lat*RADIUS_EARTH,
+            alt-1
         });
     }
     

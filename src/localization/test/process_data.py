@@ -29,6 +29,7 @@ class DatasetHandler:
         self.gnss_raw["times"] = ts
         self.gnss_raw["lats"] = lats
         self.gnss_raw["lons"] = lons
+        self.gnss_raw["alts"] = alts
         self.gnss_raw["xs"] = xs
         self.gnss_raw["ys"] = ys
 
@@ -131,6 +132,8 @@ for ln in lns:
     lats.append(elems[1])
     lons.append(elems[2])
     alts.append(elems[3])
+
+# print(gnss_times)
 
 # convert from degrees
 lats = [np.deg2rad(lat) for lat in lats]

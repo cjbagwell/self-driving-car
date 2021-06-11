@@ -77,21 +77,21 @@ State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
     pCov = fJac * pCov * fJac.t() + lJac * qCov * lJac.t();
     
     // Debugging Info
-    cout << "======================================================================\n";
-    cout << "t: " << m.time << "\t t: " << m.time << "\n";
-    cout << "currPos:\n"<< currState.pos << "\n";
-    cout << "currVel:\n"<< currState.vel << "\n";
-    cout << "currQuat: "<< currState.rot << "\n";
-    cout << "rotMat:\n" << rotMat   << "\n";
-    cout << "pCheck:\n" << pCheck   << "\n";
-    cout << "vCheck:\n" << vCheck   << "\n";
-    cout << "qChange: " << qChange  << "\n";
-    cout << "qCheck: "  << qCheck   << "\n";
-    cout << "fJac:\n"   << fJac     << "\n";
-    cout << "lJac:\n"   << lJac     << "\n";
-    cout << "qCov:\n"   << qCov     << "\n";
-    cout << "pCov:\n"   << pCov     << "\n";
-    cout << endl;
+    // cout << "======================================================================\n";
+    // cout << "t: " << m.time << "\t t: " << m.time << "\n";
+    // cout << "currPos:\n"<< currState.pos << "\n";
+    // cout << "currVel:\n"<< currState.vel << "\n";
+    // cout << "currQuat: "<< currState.rot << "\n";
+    // cout << "rotMat:\n" << rotMat   << "\n";
+    // cout << "pCheck:\n" << pCheck   << "\n";
+    // cout << "vCheck:\n" << vCheck   << "\n";
+    // cout << "qChange: " << qChange  << "\n";
+    // cout << "qCheck: "  << qCheck   << "\n";
+    // cout << "fJac:\n"   << fJac     << "\n";
+    // cout << "lJac:\n"   << lJac     << "\n";
+    // cout << "qCov:\n"   << qCov     << "\n";
+    // cout << "pCov:\n"   << pCov     << "\n";
+    // cout << endl;
     
     // 4. Update Filter State
     currState.pos = pCheck;
@@ -111,7 +111,10 @@ State EsEKF::runStep(GnssMeasurement &m, Row<double> &sensorVar){
     Mat<double> rJac = diagmat(sensorVar);
     
     // Compute Kalman Gain
-    Mat<double> k = pCov * hJac * inv(hJac * pCov * hJac.t() + rJac);
+    // cout << "hJac: \n" << hJac << "\n" << 
+    // "pCov: \n" << pCov << "\n" << 
+    // "rJac \n" << rJac << "\n" << endl;
+    Mat<double> k = pCov * hJac.t() * inv(hJac * pCov * hJac.t() + rJac);
 
     // Compute Error State
     Col<double> yMeas = m.getLocation();
@@ -164,10 +167,10 @@ PYBIND11_MODULE(py_localization, handle){
             .def(py::init<int, double, double, double, double>())
             .def("get_location", &GnssMeasurement::getLocation)
             .def_readonly("frame", &GnssMeasurement::frame)
-            .def_readonly("t", &GnssMeasurement::frame)
-            .def_readonly("alt", &GnssMeasurement::frame)
-            .def_readonly("lat", &GnssMeasurement::frame)
-            .def_readonly("lon", &GnssMeasurement::frame);
+            .def_readonly("t", &GnssMeasurement::t)
+            .def_readonly("alt", &GnssMeasurement::alt)
+            .def_readonly("lat", &GnssMeasurement::lat)
+            .def_readonly("lon", &GnssMeasurement::lon);
 }
 
 int main(){

@@ -8,11 +8,13 @@ gnss_measurements  = ds_handler.get_gnss_measurements()
 gt_measurements  = ds_handler.get_gt_measurements()
 gt_times = []
 [gt_times.append(state.time) for state in gt_measurements]
+gns_times = []
+[gns_times.append(m.t) for m in gnss_measurements]
 
 gt_index = gt_times.index(imu_measurements[0].get_time())
 init_state = gt_measurements[gt_index]
 imu_var = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-gnss_var = [0.5, 0.5, 0.5]
+gnss_var = [1, 1, 1]
 
 filter = EsEkf(init_state, [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 print(filter)
@@ -21,11 +23,17 @@ outputs = []
 gnss_index = 0
 for i in range(len(imu_measurements)):
     out = filter.run_step(imu_measurements[i], imu_var)
+    imu_t = imu_measurements[i].get_time() 
 
-    # for j in range(gnss_index, len(gnss_measurements)):
-    #     if gnss_measurements[j].t == imu_measurements[i].get_time():
-    #         out = filter.run_step(gnss_measurements[j], gnss_var)
-    #         gnss_index = j + 1
+    for j in range(gnss_index, len(gnss_measurements)):
+        gns_t = gnss_measurements[j].t
+        # print("time diff: {}".format(gns_t - imu_t))
+        if abs(gns_t - imu_t) < 0.2 and (gns_t - imu_t) > 0.0:
+            out = filter.run_step(gnss_measurements[j], gnss_var)
+            gnss_index = j + 1
+            print("gnss_measurement index: {}\t\tdt: {}".format(gnss_index, gns_t - imu_t))
+            break
+
     outputs.append(out)
 
 
@@ -80,6 +88,22 @@ compas = ds_handler.imu_raw['compas']
 gyro_x = ds_handler.imu_raw['gyro_x']
 gyro_y = ds_handler.imu_raw['gyro_y']
 gyro_z = ds_handler.imu_raw['gyro_z']
+
+
+# process gnss data
+t_gnss = ds_handler.gnss_raw['times']
+x_gnss = ds_handler.gnss_raw['xs']
+y_gnss = ds_handler.gnss_raw['ys']
+alt_gnss = ds_handler.gnss_raw['alts']
+
+
+plt.plot(t_gt, z_gt, 'b--', t_gnss, alt_gnss, 'red')
+plt.xlabel("x position")
+plt.ylabel("y position")
+plt.title("Position")
+plt.legend(["ground truth", "estimated", "start"])
+plt.draw()
+plt.show()
 
 # plot position
 plt.figure(1)
