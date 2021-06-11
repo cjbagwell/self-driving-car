@@ -14,8 +14,9 @@
 #ifndef GNSS_MEASUREMENT_H
 #define GNSS_MEASUREMENT_H
 
+#include<vector>
 #include<armadillo>
-const double RADIUS_EARTH = 6.371 * 6000000;
+const double RADIUS_EARTH = 6.371 * 1000000;
 
 class GnssMeasurement{
 public:
@@ -43,8 +44,12 @@ public:
             alt-1
         });
     }
-    
-
 };
+
+vector<double> GnssMeasurement2Position(GnssMeasurement m){
+    Col<double> pos = m.getLocation();
+    vector<double> out({pos[0], pos[1], pos[2]});
+    return out;
+}
 
 #endif

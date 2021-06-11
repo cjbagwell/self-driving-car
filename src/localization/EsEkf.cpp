@@ -165,12 +165,14 @@ PYBIND11_MODULE(py_localization, handle){
 
         py::class_<GnssMeasurement>(handle, "GnssMeasurement")
             .def(py::init<int, double, double, double, double>())
-            .def("get_location", &GnssMeasurement::getLocation)
+            // .def("get_location", &GnssMeasurement::getLocation)
             .def_readonly("frame", &GnssMeasurement::frame)
             .def_readonly("t", &GnssMeasurement::t)
             .def_readonly("alt", &GnssMeasurement::alt)
             .def_readonly("lat", &GnssMeasurement::lat)
-            .def_readonly("lon", &GnssMeasurement::lon);
+            .def_readonly("lon", &GnssMeasurement::lon)
+            ;
+        handle.def("gnss_2_position", &GnssMeasurement2Position);
 }
 
 int main(){

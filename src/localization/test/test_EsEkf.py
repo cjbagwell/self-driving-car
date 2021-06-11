@@ -1,5 +1,5 @@
 from process_data import ds_handler #type:ignore
-from py_localization import EsEkf, ImuMeasurement, State, quat_to_euler #type:ignore
+from py_localization import * #EsEkf, ImuMeasurement, State, quat_to_euler #type:ignore
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -94,16 +94,12 @@ gyro_z = ds_handler.imu_raw['gyro_z']
 t_gnss = ds_handler.gnss_raw['times']
 x_gnss = ds_handler.gnss_raw['xs']
 y_gnss = ds_handler.gnss_raw['ys']
+x_meas = [gnss_2_position(m)[0] for m in gnss_measurements]
+y_meas = [gnss_2_position(m)[1] for m in gnss_measurements]
 alt_gnss = ds_handler.gnss_raw['alts']
+lat_gnss = ds_handler.gnss_raw['lats']
+lon_gnss = ds_handler.gnss_raw['lons']
 
-
-plt.plot(t_gt, z_gt, 'b--', t_gnss, alt_gnss, 'red')
-plt.xlabel("x position")
-plt.ylabel("y position")
-plt.title("Position")
-plt.legend(["ground truth", "estimated", "start"])
-plt.draw()
-plt.show()
 
 # plot position
 plt.figure(1)

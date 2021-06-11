@@ -143,7 +143,7 @@ lons = [np.deg2rad(lon) for lon in lons]
 gnsp = [latlon2position(lat, lon) for lat, lon in zip(lats, lons)]
 gnsx = [x for x, y in gnsp]
 gnsy = [y for x, y in gnsp]
-ds_handler.set_gnss_data(gnss_times, alts, lons, alts, gnsx, gnsy)
+ds_handler.set_gnss_data(gnss_times, lats, lons, alts, gnsx, gnsy)
 
 ##################################################
 # Process IMU Data
