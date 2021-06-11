@@ -13,26 +13,28 @@ gns_times = []
 
 gt_index = gt_times.index(imu_measurements[0].get_time())
 init_state = gt_measurements[gt_index]
-imu_var = np.asarray([1, 1, 1, 1, 1, 1]) * 0.01
+imu_var = np.asarray([1, 1, 1, 1, 1, 1]) * 0.1
 gnss_var = np.asarray([1, 1, 1]) * 0.01
 
 filter = EsEkf(init_state, [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 print(filter)
 
 outputs = []
+outs_gnss = []
 gnss_index = 0
 for i in range(len(imu_measurements)):
     out = filter.run_step(imu_measurements[i], imu_var)
     imu_t = imu_measurements[i].get_time() 
 
-    for j in range(gnss_index, len(gnss_measurements)):
-        gns_t = gnss_measurements[j].t
-        # print("time diff: {}".format(gns_t - imu_t))
-        if abs(gns_t - imu_t) < 0.2 and (gns_t - imu_t) > 0.0:
-            out = filter.run_step(gnss_measurements[j], gnss_var)
-            gnss_index = j + 1
-            print("gnss_measurement index: {}\t\tdt: {}".format(gnss_index, gns_t - imu_t))
-            break
+    # for j in range(gnss_index, len(gnss_measurements)):
+    #     gns_t = gnss_measurements[j].t
+    #     # print("time diff: {}".format(gns_t - imu_t))
+    #     if abs(gns_t - imu_t) < 0.2 and (gns_t - imu_t) > 0.0:
+    #         out = filter.run_step(gnss_measurements[j], gnss_var)
+    #         outs_gnss.append(out)
+    #         gnss_index = j + 1
+    #         print("gnss_measurement index: {}\t\tdt: {}".format(gnss_index, gns_t - imu_t))
+    #         break
 
     outputs.append(out)
 
@@ -96,6 +98,7 @@ x_gnss = ds_handler.gnss_raw['xs']
 y_gnss = ds_handler.gnss_raw['ys']
 x_meas = [gnss_2_position(m)[0] for m in gnss_measurements]
 y_meas = [gnss_2_position(m)[1] for m in gnss_measurements]
+z_meas = [gnss_2_position(m)[2] for m in gnss_measurements]
 alt_gnss = ds_handler.gnss_raw['alts']
 lat_gnss = ds_handler.gnss_raw['lats']
 lon_gnss = ds_handler.gnss_raw['lons']
@@ -112,13 +115,14 @@ lon_gnss = ds_handler.gnss_raw['lons']
 ax = plt.axes(projection='3d')
 ax.plot3D(x_gt, y_gt, z_gt, '--b')
 ax.plot3D(x_out, y_out, z_out, 'r')
+# ax.plot3D(x_meas, y_meas, z_meas, '*')
 ax.set_xlabel('Easting [m]')
 ax.set_ylabel('Northing [m]')
 ax.set_zlabel('Up [m]')
 ax.set_title('Ground Truth and Estimated Trajectory')
 ax.set_zlim(-1, 1)
 ax.legend(loc=(0.62,0.77))
-ax.view_init(elev=45, azim=-50)
+# ax.view_init(elev=45, azim=-50)
 
 plt.draw()
 
@@ -199,48 +203,48 @@ plt.ylabel("z velocity")
 plt.draw()
 
 # plot imu data
-plt.figure(4)
-plt.subplot(2,3,1)
-plt.plot(t_imu, accel_x, 'b--')
-plt.title("X Acceleration vs Time")
-plt.xlabel("time")
-plt.ylabel("x acceleration")
-plt.draw()
+# plt.figure(4)
+# plt.subplot(2,3,1)
+# plt.plot(t_imu, accel_x, 'b--')
+# plt.title("X Acceleration vs Time")
+# plt.xlabel("time")
+# plt.ylabel("x acceleration")
+# plt.draw()
 
-plt.subplot(2,3,2)
-plt.plot(t_imu, accel_y, 'b--')
-plt.title("Y Acceleration vs Time")
-plt.xlabel("time")
-plt.ylabel("y acceleration")
-plt.draw()
+# plt.subplot(2,3,2)
+# plt.plot(t_imu, accel_y, 'b--')
+# plt.title("Y Acceleration vs Time")
+# plt.xlabel("time")
+# plt.ylabel("y acceleration")
+# plt.draw()
 
-plt.subplot(2,3,3)
-plt.plot(t_imu, accel_z, 'b--')
-plt.title("Z Acceleration vs Time")
-plt.xlabel("time")
-plt.ylabel("z acceleration")
-plt.draw()
+# plt.subplot(2,3,3)
+# plt.plot(t_imu, accel_z, 'b--')
+# plt.title("Z Acceleration vs Time")
+# plt.xlabel("time")
+# plt.ylabel("z acceleration")
+# plt.draw()
 
-plt.subplot(2,3,4)
-plt.plot(t_imu, gyro_x, 'b--')
-plt.title("X Rotation vs Time")
-plt.xlabel("time")
-plt.ylabel("x angular velocity")
-plt.draw()
+# plt.subplot(2,3,4)
+# plt.plot(t_imu, gyro_x, 'b--')
+# plt.title("X Rotation vs Time")
+# plt.xlabel("time")
+# plt.ylabel("x angular velocity")
+# plt.draw()
 
-plt.subplot(2,3,5)
-plt.plot(t_imu, gyro_y, 'b--')
-plt.title("Y Rotation vs Time")
-plt.xlabel("time")
-plt.ylabel("y angular velocity")
-plt.draw()
+# plt.subplot(2,3,5)
+# plt.plot(t_imu, gyro_y, 'b--')
+# plt.title("Y Rotation vs Time")
+# plt.xlabel("time")
+# plt.ylabel("y angular velocity")
+# plt.draw()
 
-plt.subplot(2,3,6)
-plt.plot(t_imu, gyro_z, 'b--')
-plt.title("Z Rotation vs Time")
-plt.xlabel("time")
-plt.ylabel("z angular velocity")
-plt.draw()
+# plt.subplot(2,3,6)
+# plt.plot(t_imu, gyro_z, 'b--')
+# plt.title("Z Rotation vs Time")
+# plt.xlabel("time")
+# plt.ylabel("z angular velocity")
+# plt.draw()
 
 
 plt.show()
