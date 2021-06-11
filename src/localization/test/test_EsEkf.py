@@ -13,8 +13,8 @@ gns_times = []
 
 gt_index = gt_times.index(imu_measurements[0].get_time())
 init_state = gt_measurements[gt_index]
-imu_var = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-gnss_var = [1, 1, 1]
+imu_var = np.asarray([1, 1, 1, 1, 1, 1]) * 0.01
+gnss_var = np.asarray([1, 1, 1]) * 0.01
 
 filter = EsEkf(init_state, [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 print(filter)
@@ -102,12 +102,24 @@ lon_gnss = ds_handler.gnss_raw['lons']
 
 
 # plot position
-plt.figure(1)
-plt.plot(x_gt, y_gt, 'b--', x_out, y_out, 'red', x_gt[0], y_gt[0], 'x')
-plt.xlabel("x position")
-plt.ylabel("y position")
-plt.title("Position")
-plt.legend(["ground truth", "estimated", "start"])
+# plt.figure(1)
+# plt.plot(x_gt, y_gt, 'b--', x_out, y_out, 'red', x_gt[0], y_gt[0], 'x')
+# plt.xlabel("x position")
+# plt.ylabel("y position")
+# plt.title("Position")
+# plt.legend(["ground truth", "estimated", "start"])
+
+ax = plt.axes(projection='3d')
+ax.plot3D(x_gt, y_gt, z_gt, '--b')
+ax.plot3D(x_out, y_out, z_out, 'r')
+ax.set_xlabel('Easting [m]')
+ax.set_ylabel('Northing [m]')
+ax.set_zlabel('Up [m]')
+ax.set_title('Ground Truth and Estimated Trajectory')
+ax.set_zlim(-1, 1)
+ax.legend(loc=(0.62,0.77))
+ax.view_init(elev=45, azim=-50)
+
 plt.draw()
 
 # plot position and rotation
