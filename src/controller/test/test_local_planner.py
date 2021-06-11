@@ -80,7 +80,7 @@ class TestLocalPlanner(LocalPlanner):
         # default params
         self._dt = 1.0 / 20.0
         self._target_speed = 20.0  # Km/h
-        self._sampling_radius = self._target_speed * 1 / 3.6  # 1 seconds horizon
+        self._sampling_radius = self._target_speed * 1 / 7.2  # 1 seconds horizon
         self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
         self._max_brake = 0.3
         self._max_throt = 0.75
