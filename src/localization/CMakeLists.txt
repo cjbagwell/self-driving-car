@@ -14,10 +14,13 @@ add_library(localization
     ImuMeasurement.h
     rotations.h
     State.h
+    VisualOdometer.h
+    VisualOdometer.cpp
 )
 
 target_include_directories(localization 
     PUBLIC "${LIBS}/pybind11/include"
+    PUBLIC "${LIBS}/opencv/include"
     /usr/include/python3.8)
 
 pybind11_add_module(py_localization EsEkf.cpp)
