@@ -26,15 +26,15 @@ for i in range(len(imu_measurements)):
     out = filter.run_step(imu_measurements[i], imu_var)
     imu_t = imu_measurements[i].get_time() 
 
-    # for j in range(gnss_index, len(gnss_measurements)):
-    #     gns_t = gnss_measurements[j].t
-    #     # print("time diff: {}".format(gns_t - imu_t))
-    #     if abs(gns_t - imu_t) < 0.2 and (gns_t - imu_t) > 0.0:
-    #         out = filter.run_step(gnss_measurements[j], gnss_var)
-    #         outs_gnss.append(out)
-    #         gnss_index = j + 1
-    #         print("gnss_measurement index: {}\t\tdt: {}".format(gnss_index, gns_t - imu_t))
-    #         break
+    for j in range(gnss_index, len(gnss_measurements)):
+        gns_t = gnss_measurements[j].t
+        # print("time diff: {}".format(gns_t - imu_t))
+        if abs(gns_t - imu_t) < 0.2 and (gns_t - imu_t) > 0.0:
+            out = filter.run_step(gnss_measurements[j], gnss_var)
+            outs_gnss.append(out)
+            gnss_index = j + 1
+            print("gnss_measurement index: {}\t\tdt: {}".format(gnss_index, gns_t - imu_t))
+            break
 
     outputs.append(out)
 
