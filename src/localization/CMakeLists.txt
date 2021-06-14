@@ -3,6 +3,9 @@ include_directories(${LIBS}/**)
 add_subdirectory(test)
 enable_testing()
 
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_C_STANDARD 99)
@@ -20,8 +23,17 @@ add_library(localization
 
 target_include_directories(localization 
     PUBLIC "${LIBS}/pybind11/include"
-    PUBLIC "${LIBS}/opencv/include"
-    /usr/include/python3.8)
+    /usr/include/python3.8
+)
+
+add_executable(
+    VoTest
+    VisualOdometer.cpp
+)
+
+target_link_libraries(VoTest
+    ${OpenCV_LIBS}
+)
 
 pybind11_add_module(py_localization EsEkf.cpp)
 

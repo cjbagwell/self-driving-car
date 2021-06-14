@@ -175,7 +175,7 @@ PYBIND11_MODULE(py_localization, handle){
         handle.def("gnss_2_position", &GnssMeasurement2Position);
 }
 
-int main(){
-    cout << "Hello World!" << endl;
-    return 1;
-}
+// int main(){
+//     cout << "Hello World!" << endl;
+//     return 1;
+// }

@@ -2,4 +2,3 @@
 add_subdirectory(googletest)
 add_subdirectory(armadillo-10.5.1)
 add_subdirectory(pybind11)
-add_subdirectory(opencv)

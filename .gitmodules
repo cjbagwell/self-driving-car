@@ -5,6 +5,3 @@
 [submodule "libs/googletest"]
 	path = libs/googletest
 	url = https://github.com/google/googletest.git
-[submodule "libs/opencv"]
-	path = libs/opencv
-	url = https://github.com/opencv/opencv.git

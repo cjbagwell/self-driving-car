@@ -14,11 +14,5 @@
 #define VISUAL_ODOMETER_H
 
 
-#include<iostream>
-#include<ostream>
-#include<vector>
-#include<opencv2/highgui.hpp>
-
-
 
 #endif
