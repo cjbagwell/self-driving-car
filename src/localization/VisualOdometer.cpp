@@ -11,7 +11,7 @@ using namespace cv;
 int main()
 {
     std::string image_path = samples::findFile("starry_night.jpg");
-    Mat img = imread(image_path, IMREAD_COLOR);
+    cv::Mat img = imread(image_path, IMREAD_COLOR);
     if(img.empty())
     {
         std::cout << "Could not read the image: " << image_path << std::endl;

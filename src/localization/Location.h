@@ -9,6 +9,9 @@
  * 
  */
 
+#ifndef LOCATION_H
+#define LOCATION_H
+
 class Location{
 public:
     double x;
@@ -34,3 +37,5 @@ public:
              yaw(yaw)
              {};
 };
+
+#endif // LOCATION_H

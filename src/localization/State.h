@@ -8,6 +8,10 @@
  * @copyright Copyright (c) 2021
  * 
  */
+
+#ifndef STATE_H
+#define STATE_H
+
 // std lib includes
 #include<iostream>
 #include<ostream>
@@ -16,14 +20,11 @@
 #include<armadillo>
 #include "rotations.h"
 
-using namespace std;
-using namespace arma;
-
 class State{
 public:
     /** TODO: probs make the members private */
-    Col<double> pos;
-    Col<double> vel;
+    arma::Col<double> pos;
+    arma::Col<double> vel;
     Quaternion rot;    
     double time;
     int frame; /** TODO: not sure about the type of 'frame'*/
@@ -44,8 +45,8 @@ public:
      * @param time time this state was calculated
      * @param frame frame that this state was calcualted
      */
-    State(Col<double> pos, 
-          Col<double> vel, 
+    State(arma::Col<double> pos, 
+          arma::Col<double> vel, 
           Quaternion rot, 
           double time=-1, 
           double frame=-1)
@@ -57,9 +58,9 @@ public:
           frame(frame)
           {};
     
-    State(vector<double> pos,
-          vector<double> vel,
-          vector<double> rot,
+    State(std::vector<double> pos,
+          std::vector<double> vel,
+          std::vector<double> rot,
           double time,
           int frame)
           :
@@ -74,8 +75,8 @@ public:
         return arma::norm(vel);
     }
 
-    vector<double> getPosition(){return {pos[0], pos[1], pos[2]};}
-    vector<double> getVelocity(){return {vel[0], vel[1], vel[2]};}
+    std::vector<double> getPosition(){return {pos[0], pos[1], pos[2]};}
+    std::vector<double> getVelocity(){return {vel[0], vel[1], vel[2]};}
 };
 
 std::ostream& operator<<(std::ostream& out, const State& s){
@@ -86,3 +87,5 @@ std::ostream& operator<<(std::ostream& out, const State& s){
         "rot:" << s.rot << "}";
     return out;
 }
+
+#endif // STATE_H

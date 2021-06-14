@@ -9,6 +9,10 @@
  * @copyright Copyright (c) 2021
  * 
  */
+
+#ifndef IMU_MEASUREMENT_H
+#define IMU_MEASUREMENT_H
+
 // std lib includes
 #include<iostream>
 #include<ostream>
@@ -17,20 +21,13 @@
 // project includes
 #include<armadillo>
 
-using namespace arma;
-using namespace std;
-
-#ifndef IMU_MEASUREMENT_H
-#define IMU_MEASUREMENT_H
-
 class ImuMeasurement{
 private:
 public:
-    Col<double> accelerometer;
+    arma::Col<double> accelerometer, gyro;
     double compas, time;
-    Col<double> gyro;
 
-    friend ostream& operator<<(ostream& out, const ImuMeasurement& m);
+    friend std::ostream& operator<<(std::ostream& out, const ImuMeasurement& m);
 
     double getTime(){return this->time;}
 
@@ -44,9 +41,9 @@ public:
      * @param g gyroscope measurement vector
      * @param t time the measurement occured at
      */
-    ImuMeasurement(Col<double> a, 
+    ImuMeasurement(arma::Col<double> a, 
                    double c, 
-                   Col<double> g,
+                   arma::Col<double> g,
                    double t)
                    :
                    accelerometer(a),
@@ -63,9 +60,9 @@ public:
      * @param g gryoscope measurement from the IMU. Must be length 3.
      * @param t time the measurement occured at.
      */
-    ImuMeasurement(vector<double> a,
+    ImuMeasurement(std::vector<double> a,
                    double c,
-                   vector<double> g,
+                   std::vector<double> g,
                    double t)
                    :
                    accelerometer(a),
@@ -74,17 +71,17 @@ public:
                    time(t)
     {
         if(a.size() != 3){
-            cout << "Accelerometer measurement must be of length 3" << endl;
+            std::cout << "Accelerometer measurement must be of length 3" << std::endl;
             throw -1;
         }
         if(g.size() != 3){
-            cout << "Gyroscope measurement must be of length 3" << endl;
+            std::cout << "Gyroscope measurement must be of length 3" << std::endl;
             throw -1;
         }    
     };
 };
 
-ostream& operator<<(ostream& out, const ImuMeasurement& m){
+std::ostream& operator<<(std::ostream& out, const ImuMeasurement& m){
     out << "{accel:" << m.accelerometer <<
             ", comp:" << m.compas <<
             ", gyro:" << m.gyro;

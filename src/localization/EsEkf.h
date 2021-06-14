@@ -9,6 +9,9 @@
  * 
  */
 
+#ifndef ES_EKF_H
+#define ES_EKF_H
+
 // std lib includes
 #include<vector>
 #include<list>
@@ -20,9 +23,6 @@
 #include "State.h"
 #include "ImuMeasurement.h"
 #include "GnssMeasurement.h"
-
-#ifndef ES_EKF_H
-#define ES_EKF_H
 
 class EsEKF{
 private:
@@ -36,7 +36,7 @@ public:
      */
     EsEKF(State initialState, arma::Row<double> initialVariance);
 
-    EsEKF(State initialState, vector<double> initialVariance);
+    EsEKF(State initialState, std::vector<double> initialVariance);
 
     /**
      * @returns the current state of the vehicle.
@@ -53,7 +53,7 @@ public:
      * @param sensorVar 
      * @return State 
      */
-    State runStep(ImuMeasurement &m, vector<double> sensorVar);
+    State runStep(ImuMeasurement &m, std::vector<double> sensorVar);
 
     /**
      * updates the state of the vehicle based on a new measurement from the
@@ -66,7 +66,7 @@ public:
      */
     State runStep(ImuMeasurement &newImu, arma::Row<double> &sensorVar);
     
-    State runStep(GnssMeasurement &m, vector<double> sensorVar){
+    State runStep(GnssMeasurement &m, std::vector<double> sensorVar){
         arma::Row<double> sVar(sensorVar);
     return this->runStep(m, sVar);
 }

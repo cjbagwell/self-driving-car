@@ -46,9 +46,9 @@ public:
     }
 };
 
-vector<double> GnssMeasurement2Position(GnssMeasurement m){
-    Col<double> pos = m.getLocation();
-    vector<double> out({pos[0], pos[1], pos[2]});
+std::vector<double> GnssMeasurement2Position(GnssMeasurement m){
+    arma::Col<double> pos = m.getLocation();
+    std::vector<double> out({pos[0], pos[1], pos[2]});
     return out;
 }
 

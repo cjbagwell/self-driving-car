@@ -10,6 +10,9 @@
  * 
  */
 
+#ifndef ROTATIONS_H
+#define ROTATIONS_H
+
 // std lib includes
 #include<iostream>
 #include<ostream>
@@ -19,13 +22,6 @@
 
 // project includes
 #include<armadillo>
-
-#ifndef ROTATIONS_H
-#define ROTATIONS_H
-
-using namespace arma;
-using namespace std;
-
 
 // =============================================================================
 // Global Variables and Functions
@@ -39,7 +35,7 @@ const double QUAT_EQUALS_TOLERANCE = 0.000001;
  * @param angle angle [rad] to be wrapped between -PI and PI
  * @return double wrapped angle
  */
-double angleNormalise(double& angle){
+inline double angleNormalise(double& angle){
     while(true){
         if(angle <= -PI) angle += 2 * PI;
         else if(angle > PI) angle -= 2 * PI;
@@ -51,14 +47,14 @@ double angleNormalise(double& angle){
  * @brief TODO: some stuff here
  * 
  * @param angles 
- * @return Col<double> 
+ * @return arma::Col<double> 
  */
-Col<double> angleNormalise(Col<double> angles){
+inline arma::Col<double> angleNormalise(arma::Col<double> angles){
     std::vector<double> tmp;
     for(auto angle: angles){
         tmp.push_back(angleNormalise(angle));
     }
-    return Col<double>(tmp);
+    return arma::Col<double>(tmp);
 }
 
 /**
@@ -67,8 +63,8 @@ Col<double> angleNormalise(Col<double> angles){
  * @param v 
  * @return arma::Mat<double> 
  */
-Mat<double> skewSemetric(Col<double> v){
-    return Mat<double>({{0, -v[2], v[1]}, 
+inline arma::Mat<double> skewSemetric(arma::Col<double> v){
+    return arma::Mat<double>({{0, -v[2], v[1]}, 
                         {v[2], 0, -v[0]}, 
                         {-v[1], v[0], 0}});
 }
@@ -81,7 +77,7 @@ class Quaternion{
 private:
     double w, x, y, z;
 public:
-    friend ostream& operator<<(ostream& out, const Quaternion& q);
+    friend std::ostream& operator<<(std::ostream& out, const Quaternion& q);
     bool operator==(const Quaternion& q2){
         if((w - q2.w) < QUAT_EQUALS_TOLERANCE && 
            (x - q2.x) < QUAT_EQUALS_TOLERANCE && 
@@ -93,14 +89,14 @@ public:
     }
 
     Quaternion(double w=1, double x=0, double y=0, double z=0):w(w), x(x), y(y), z(z){};
-    Quaternion(Row<double> quaternionArray){
+    Quaternion(arma::Row<double> quaternionArray){
         this->w = quaternionArray[0];
         this->x = quaternionArray[1];
         this->y = quaternionArray[2];
         this->z = quaternionArray[3];
     }
     
-    Quaternion(const Col<double>& angles, const bool& isAxisAngles){
+    Quaternion(const arma::Col<double>& angles, const bool& isAxisAngles){
         if(isAxisAngles){
             double norm = arma::norm(angles);
             this->w = cos(norm/2);
@@ -108,7 +104,7 @@ public:
                 this->x = this->y = this->z = 0;
             }
             else{
-                Col<double> imag = angles / norm * sin(norm/2);
+                arma::Col<double> imag = angles / norm * sin(norm/2);
                 this->x = imag[0];
                 this->y = imag[1];
                 this->z = imag[2];
@@ -142,44 +138,44 @@ public:
 
     Quaternion operator*(const Quaternion& q){
         // should be quat_mult_left?
-        Col<double> v = {x, y, z};
-        Mat<double> sumTerm = arma::zeros(4,4);
+        arma::Col<double> v = {x, y, z};
+        arma::Mat<double> sumTerm = arma::zeros(4,4);
         sumTerm.submat(0,1,0,3) = -v.as_row();
         sumTerm.submat(1,0,3,0) = v;
         sumTerm.submat(1,1,3,3) = skewSemetric(v);
-        Mat<double> sigma = this->w * eye(4,4) + sumTerm;
-        Col<double> quatArr = sigma * Col<double>({q.w, q.x, q.y, q.z}); 
+        arma::Mat<double> sigma = this->w * arma::eye(4,4) + sumTerm;
+        arma::Col<double> quatArr = sigma * arma::Col<double>({q.w, q.x, q.y, q.z}); 
         Quaternion retQuat(quatArr.as_row());
         // retQuat.normalize();
         return retQuat;
     }
 
-    Col<double> toAxisAngles(){
-        double t = 2 * acos(std::max(-1.0, std::min(this->w, 1.0)));
-        Col<double> angles = t * Col<double>({x, y, z});
+    arma::Col<double> toAxisAngles(){
+        double t = 2 * std::acos(std::max(-1.0, std::min(this->w, 1.0)));
+        arma::Col<double> angles = t * arma::Col<double>({x, y, z});
         return angleNormalise(angles);
     }
     
-    Col<double> toEulerAngles(){
-        double roll  = atan2(2 * (w*x + y*z), 1 - 2*(x*x + y*y));
-        double pitch = asin(2 * (w*y - z*x));
-        double yaw   = atan2(2 * (w*z + x*y), 1 - 2 * (y*y + z*z));
-        Col<double> eAngles({roll, pitch, yaw});
+    arma::Col<double> toEulerAngles(){
+        double roll  = std::atan2(2 * (w*x + y*z), 1 - 2*(x*x + y*y));
+        double pitch = std::asin(2 * (w*y - z*x));
+        double yaw   = std::atan2(2 * (w*z + x*y), 1 - 2 * (y*y + z*z));
+        arma::Col<double> eAngles({roll, pitch, yaw});
         return angleNormalise(eAngles);
     }
 
-    Mat<double> toRotMat(){
-        Col<double> v({x, y, z});
-        Row<double> vt = v.t();
-        return (w*w - dot(vt,v)) * eye(3,3) + 2*v*vt + 2*w*skewSemetric(v);
+    arma::Mat<double> toRotMat(){
+        arma::Col<double> v({x, y, z});
+        arma::Row<double> vt = v.t();
+        return (w*w - arma::dot(vt,v)) * arma::eye(3,3) + 2*v*vt + 2*w*skewSemetric(v);
     }
 
-    Row<double> asArma(){
-        return Row<double>({w, x, y, z});
+    arma::Row<double> asArma(){
+        return arma::Row<double>({w, x, y, z});
     }
 
-    vector<double> asVector(){
-        return vector<double>({w, x, y, z});
+    std::vector<double> asVector(){
+        return std::vector<double>({w, x, y, z});
     }
     
     Quaternion normalize(){
@@ -198,20 +194,20 @@ public:
 
 };
 
-ostream& operator<<(ostream& out, const Quaternion& q){
+inline std::ostream& operator<<(std::ostream& out, const Quaternion& q){
     out << "(" << q.w << ", " << q.x << ", " << q.y << ", " << q.z << ")";
     return out;
 }
 
-Quaternion eulerToQuaternion(vector<double> angles){
+inline Quaternion eulerToQuaternion(std::vector<double> angles){
     Quaternion retQuat(angles, false);
     return retQuat;
 }
 
-vector<double> quaternionToEuler(Quaternion q){
-    Col<double> out = q.toEulerAngles();
-    vector<double> ret = {out[0], out[1], out[2]};
+inline std::vector<double> quaternionToEuler(Quaternion q){
+    arma::Col<double> out = q.toEulerAngles();
+    std::vector<double> ret = {out[0], out[1], out[2]};
     return ret;
 }
 
-#endif
+#endif // ROTATIONS_H
