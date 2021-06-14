@@ -32,8 +32,8 @@ private:
 /** TODO: probs make these pointers and make params const */
     cv::Mat prevImg;
     State prevState;
-    cv::Feature2D* detector;
-    cv::DescriptorMatcher* matcher; //BFMatcher or FlannBasedMatcher
+    cv::Ptr<cv::ORB> detector;
+    cv::Ptr<cv::BFMatcher> matcher; //BFMatcher or FlannBasedMatcher
 
     /** 
      * TODO: need to add camera calibration matrix k. not sure about type yet.

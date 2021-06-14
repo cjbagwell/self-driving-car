@@ -12,6 +12,32 @@ using namespace cv;
 using namespace std;
 
 State VisualOdometer::runStep(Mat currImg){
+    // Extract Features and Descriptors
+    vector<KeyPoint> kps1, kps2;
+    Mat des1, des2;
+    detector->detectAndCompute(prevImg, noArray(), kps1, des1);
+    detector->detectAndCompute(currImg, noArray(), kps2, des2);
+    
+    // Find Matching Features
+    vector<DMatch> matches;
+    matcher->match(des1, des2, matches);
+    
+    // Filter Matches
+    const int thresh = 30;
+    vector<DMatch> goodMatches;
+    for(auto match : matches){
+        if(match.distance < thresh){
+            goodMatches.push_back(match);
+        }
+    }
+
+    // Show Matches (for debugging)
+    Mat outImg;
+    drawMatches(prevImg, kps1, currImg, kps2, goodMatches,outImg);
+    imshow("Matched Features", outImg);
+    int k = waitKey(0); // Wait for a keystroke in the window
+
+    
 
     return State();
 }
@@ -23,24 +49,9 @@ int main()
     cv::Mat img1 = imread(image_1_path, IMREAD_COLOR);
     cv::Mat img2 = imread(image_2_path, IMREAD_COLOR);
     
-    // imshow("Display window", img);
-    // 
-
-    Ptr<ORB> orb = ORB::create();
-
-    vector<KeyPoint> kps1, kps2;
-    Mat des1, des2;
-    orb->detectAndCompute(img1, noArray(), kps1, des1);
-    orb->detectAndCompute(img2, noArray(), kps2, des2);
-    
-    Ptr<DescriptorMatcher> matcher = BFMatcher::create(cv::NORM_HAMMING, true);
-    vector<DMatch> matches;
-    matcher->match(des1, des2, matches);
-    Mat outImg;
-    drawMatches(img1, kps1, img2, kps2, matches,outImg);
-    imshow("Matched Features", outImg);
-    int k = waitKey(0); // Wait for a keystroke in the window
-
+    State s1 = State();
+    VisualOdometer vo = VisualOdometer(img1, s1);
+    State s2 = vo.runStep(img2);
 
 
     // if(k == 's')
