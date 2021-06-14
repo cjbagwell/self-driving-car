@@ -79,7 +79,7 @@ public:
     std::vector<double> getVelocity(){return {vel[0], vel[1], vel[2]};}
 };
 
-std::ostream& operator<<(std::ostream& out, const State& s){
+inline std::ostream& operator<<(std::ostream& out, const State& s){
     out << "State {frame:" << s.frame << 
         "time:" << s.time << 
         "pos:" << s.pos << 
