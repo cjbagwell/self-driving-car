@@ -33,6 +33,7 @@ add_executable(
 
 target_link_libraries(VoTest
     ${OpenCV_LIBS}
+    armadillo
 )
 
 pybind11_add_module(py_localization EsEkf.cpp)

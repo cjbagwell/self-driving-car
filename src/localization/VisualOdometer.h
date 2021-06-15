@@ -31,6 +31,7 @@ class VisualOdometer{
 private:
 /** TODO: probs make these pointers and make params const */
     cv::Mat prevImg;
+    cv::Mat k;
     State prevState;
     cv::Ptr<cv::ORB> detector;
     cv::Ptr<cv::BFMatcher> matcher; //BFMatcher or FlannBasedMatcher
@@ -49,9 +50,12 @@ public:
      * @param initImg The image taken at the initial state
      * @param initState The initial State of the vehicle
      */
-    VisualOdometer(cv::Mat initImg,
+    VisualOdometer(
+                   cv::Mat calibMat,
+                   cv::Mat initImg,
                    State initState)
                    :
+                   k(calibMat),
                    prevImg(initImg),
                    prevState(initState),
                    detector(cv::ORB::create()),
