@@ -850,6 +850,8 @@ def game_loop(args):
             clock.tick_busy_loop(60)
             if controller.parse_events():
                 return
+            
+            print("")
 
             # As soon as the server is ready continue!
             if not world.world.wait_for_tick(10.0):

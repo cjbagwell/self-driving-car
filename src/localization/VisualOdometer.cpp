@@ -65,14 +65,20 @@ State VisualOdometer::runStep(cv::Mat currImg){
 
     // Recover Pose
     cv::Mat E, R, t, mask;
+<<<<<<< HEAD
     E = cv::findEssentialMat(kps1m, kps2m, this->k, RANSAC, 0.899, 1.0, mask);
     cout << "E: \n" << E << endl;
+=======
+    E = cv::findEssentialMat(kps1m, kps2m, this->k, RANSAC, 0.699, 1, mask);
+>>>>>>> f761b41... Trajectory is better, but still broken.  Need to combine prior translations
     recoverPose(E, kps1m, kps2m, this->k, R, t, mask);
-    cout << "R:\n" << R << endl;
+    // cout << "R:\n" << R << endl;
+    // cout << "t:\n" << t << endl;
     
     arma::Mat<double> trans(4,4, arma::fill::eye);
-    arma::Mat<double> temp1(reinterpret_cast<double*>(R.data), R.rows, R.cols);
+    arma::Mat<double> temp1(reinterpret_cast<double*>(R.data), R.cols, R.rows);
     arma::Mat<double> temp2(reinterpret_cast<double*>(t.data), t.rows, t.cols);
+<<<<<<< HEAD
     trans.submat(0,0,2,2) = temp1;
     trans.submat(0, 3, 2, 3) = temp2;
     cout << "R" << "\n" << temp1 << endl;
@@ -87,6 +93,19 @@ State VisualOdometer::runStep(cv::Mat currImg){
     cout << "p1:\n" << p1 << endl;
     cout << "p2:\n" << p2 << endl;
     this->prevState.pos = p2.subvec(0,2);
+=======
+    // cout << "temp1:\n" << temp1.t() << endl;
+    // cout << "temp2:\n" << temp2 << endl;
+    
+    trans.submat(0,0,2,2) = temp1.t();
+    trans.submat(0, 3, 2, 3) = -temp2;
+    // cout << "trans:\n" << trans << endl;
+    arma::Col<double> p1(4,1, arma::fill::zeros), p2(4,1, arma::fill::ones);
+    p1[3] = 1;
+
+    p2 = arma::inv(trans) * p1;
+    this->prevState.pos = p2.subvec(0,2) + this->prevState.pos;
+>>>>>>> f761b41... Trajectory is better, but still broken.  Need to combine prior translations
     this->prevImg = currImg;
 
     return this->prevState;
@@ -95,16 +114,21 @@ State VisualOdometer::runStep(cv::Mat currImg){
 int main()
 {
     std::string image_dir_path = "/home/jordan/Projects/self-driving-car/src/localization/test/images/";
+<<<<<<< HEAD
     cv::Mat k({640, 0, 640, 0, 480, 480, 0, 0, 1});
     cout << k.dims << endl;
     cout << "in main k : \n" << k << endl;
+=======
+    cv::Mat k({400, 0, 400, 0, 400, 300, 0, 0, 1});
+    cv::Mat img = imread(image_dir_path + "test_image_0.png", IMREAD_GRAYSCALE);
+>>>>>>> f761b41... Trajectory is better, but still broken.  Need to combine prior translations
 
     k = k.reshape(1, {3,3});
     cout << k.dims << endl;
     cout << "in main k : \n" << k << endl;
     State s1 = State();
     VisualOdometer vo = VisualOdometer(k, img, s1);
-    int maxNum = 100;
+    int maxNum = 500;
     int imNum = 1;
     vector<State> outputState(maxNum);
     vector<double> xOut(maxNum), yOut(maxNum), zOut(maxNum);
@@ -112,13 +136,15 @@ int main()
         std::string imName = image_dir_path + "test_image_" + to_string(imNum) + ".png";
         cout << "Image Name: " << imName << endl;
         try{
-            img = imread(imName, IMREAD_COLOR);
+            img = imread(imName, IMREAD_GRAYSCALE);
             State s2 = vo.runStep(img);
             outputState.push_back(s2);
             xOut.push_back(s2.pos[0]);
             yOut.push_back(s2.pos[1]);
             zOut.push_back(s2.pos[2]);
             cout << "Predicted State: \n" << s2.pos << endl;
+            // plt::plot(xOut, yOut, "--r");
+            // plt::show();
         }
         catch(int e){
             break;
@@ -126,7 +152,7 @@ int main()
         if(++imNum > maxNum) break;
     }
 
-    plt::plot(xOut, yOut, "--r");
+    plt::plot(xOut, yOut, "--b");
     plt::show();
     
     // if(k == 's')
