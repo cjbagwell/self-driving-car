@@ -33,8 +33,8 @@ private:
     cv::Mat prevImg;
     cv::Mat k;
     State prevState;
-    cv::Ptr<cv::ORB> detector;
-    cv::Ptr<cv::BFMatcher> matcher; //BFMatcher or FlannBasedMatcher
+    cv::Ptr<cv::FeatureDetector> detector;
+    cv::Ptr<cv::DescriptorMatcher> matcher; //BFMatcher or FlannBasedMatcher
 
     /** 
      * TODO: need to add camera calibration matrix k. not sure about type yet.
@@ -58,7 +58,7 @@ public:
                    k(calibMat),
                    prevImg(initImg),
                    prevState(initState),
-                   detector(cv::ORB::create()),
+                   detector(cv::ORB::create(500, 1.2, 9, 31, 0, 2, cv::ORB::HARRIS_SCORE, 31, 20)),
                    matcher(cv::BFMatcher::create(cv::NORM_HAMMING, true))
                    {};
 

@@ -1,9 +1,13 @@
+
+cmake_minimum_required(VERSION 3.16)
+
 include_directories(/usr/include/python3.8)
 include_directories(${LIBS}/**)
 add_subdirectory(test)
 enable_testing()
 
 find_package( OpenCV REQUIRED )
+find_package( Python3 REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 
@@ -22,8 +26,13 @@ add_library(localization
 )
 
 target_include_directories(localization 
-    PUBLIC "${LIBS}/pybind11/include"
-    /usr/include/python3.8
+    PRIVATE "${LIBS}/pybind11/include"
+    PRIVATE "${LIBS}/matplotlib-cpp"
+    PRIVATE ${PYTHON_INCLUDE_DIRS}
+)
+
+target_link_libraries(localization
+    ${PYTHON_LIBRARIES}
 )
 
 add_executable(
@@ -33,7 +42,13 @@ add_executable(
 
 target_link_libraries(VoTest
     ${OpenCV_LIBS}
+    ${PYTHON_LIBRARIES}
     armadillo
+)
+
+target_include_directories(VoTest
+    PRIVATE "${LIBS}/matplotlib-cpp"
+    PRIVATE ${PYTHON_INCLUDE_DIRS}
 )
 
 pybind11_add_module(py_localization EsEkf.cpp)
