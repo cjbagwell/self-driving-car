@@ -19,6 +19,7 @@ import sys
 import weakref
 import argparse
 import logging
+import shutil
 from matplotlib import pyplot as plt
 
 try:
@@ -741,6 +742,44 @@ def create_data_files(gnss_es, imu_es, loc_es):
     imu_data = zip(imu_times, ac_x, ac_y, ac_z, comp, gy_x, gy_y, gy_z)
     write_data_file("IMU_data.txt", imu_data)
 
+    # Camera Data
+    im_num = 0
+    time = []
+    locx = []
+    locy = []
+    locz = []
+    velx = []
+    vely = []
+    velz = []
+    pitch = []
+    yaw = []
+    roll = []
+
+    images_dir = "./images"
+    for f in os.listdir(images_dir):
+        print("removing file " + f)
+        os.remove(os.path.join(images_dir, f))
+    
+    for event in cam_es:
+        fname = "images/test_image_{}.png".format(im_num)
+        event.save_to_disk(fname)
+
+        for t, loc, vel, rot in gt_events:
+            if t == event.timestamp:
+                time.append(t)
+                locx.append(loc.x)
+                locy.append(loc.y)
+                locz.append(loc.z)
+                velx.append(vel.x)
+                vely.append(vel.y)
+                velz.append(vel.z)
+                pitch.append(rot.pitch)
+                yaw.append(rot.yaw)
+                roll.append(rot.roll)
+                break
+        im_num += 1
+        print("im {} of {}".format(im_num, len(cam_es))) 
+    write_data_file("images/GT_Data.txt", zip(time, locx, locy, locz, velx, vely, velz, roll, pitch, yaw))
 
     # Location Data (one for each sensor event)
     loc_times = []
@@ -851,8 +890,6 @@ def game_loop(args):
             if controller.parse_events():
                 return
             
-            print("")
-
             # As soon as the server is ready continue!
             if not world.world.wait_for_tick(10.0):
                 continue
@@ -980,7 +1017,7 @@ def main():
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
         
-    create_data_files(gnss_events, imu_events, gt_events)
+    create_data_files(gnss_events, imu_events, cam_events, gt_events)
 
 if __name__ == '__main__':
     main()

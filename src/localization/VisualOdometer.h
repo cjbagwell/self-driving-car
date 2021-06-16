@@ -26,6 +26,7 @@
 
 // project includes
 #include "State.h"
+#include<armadillo>
 
 class VisualOdometer{
 private:
@@ -33,6 +34,7 @@ private:
     cv::Mat prevImg;
     cv::Mat k;
     State prevState;
+    arma::Mat<double> prevTrans;
     cv::Ptr<cv::FeatureDetector> detector;
     cv::Ptr<cv::DescriptorMatcher> matcher; //BFMatcher or FlannBasedMatcher
 
@@ -60,7 +62,11 @@ public:
                    prevState(initState),
                    detector(cv::ORB::create(500, 1.2, 9, 31, 0, 2, cv::ORB::HARRIS_SCORE, 31, 20)),
                    matcher(cv::BFMatcher::create(cv::NORM_HAMMING, true))
-                   {};
+                   {
+        prevTrans = arma::Mat<double>(4,4, arma::fill::eye);
+        prevTrans.submat(0,0,2,2) = prevState.rot.toRotMat();
+        prevTrans.submat(0,3, 2, 3) = prevState.pos;
+    };
 
     void setPrevState(State prevState){this->prevState = prevState;}
     
