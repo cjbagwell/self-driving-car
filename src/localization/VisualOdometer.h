@@ -31,6 +31,7 @@
 class VisualOdometer{
 private:
 /** TODO: probs make these pointers and make params const */
+    bool debug;
     cv::Mat prevImg;
     cv::Mat k;
     State prevState;
@@ -57,11 +58,13 @@ public:
     VisualOdometer(
                    cv::Mat calibMat,
                    cv::Mat initImg,
-                   State initState)
+                   State initState,
+                   bool debug=true)
                    :
                    k(calibMat),
                    prevImg(initImg),
                    prevState(initState),
+                   debug(debug),
                    prevKps(std::vector<cv::KeyPoint>()),
                    detector(cv::ORB::create(1000, 1.2, 9, 31, 0, 2, cv::ORB::HARRIS_SCORE, 31, 20)),
                    matcher(cv::BFMatcher::create(cv::NORM_HAMMING, true))

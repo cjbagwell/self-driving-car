@@ -63,38 +63,31 @@ State VisualOdometer::runStep(const cv::Mat &currImg)
     }
 
     // Show Matches (for debugging)
-    cv::Mat outImg;
-    visualizeMotion(currImg, prevKps, currKps, goodMatches, outImg);
-    cv::namedWindow("Matched Features", cv::WINDOW_FULLSCREEN);
-    imshow("Matched Features", outImg);
-    waitKey(1); // Wait for a keystroke in the window
+    if (this->debug)
+    {
+        cv::Mat outImg;
+        visualizeMotion(currImg, prevKps, currKps, goodMatches, outImg);
+        cv::namedWindow("Matched Features - Debugging", cv::WINDOW_FULLSCREEN);
+        imshow("Matched Features - Debugging", outImg);
+        waitKey(1); // Wait for a keystroke in the window
+    }
 
     // Recover Pose
     cv::Mat E, R, t, mask;
-
-    E = cv::findEssentialMat(kps1m, kps2m, this->k, RANSAC, 0.699, 1, mask);
-    recoverPose(E, kps1m, kps2m, this->k, R, t, mask);
-    // cout << "R:\n" << R << endl;
-    // cout << "t:\n" << t << endl;
-    
-    arma::Mat<double> trans(4,4, arma::fill::eye);
-    arma::Mat<double> temp1(reinterpret_cast<double*>(R.data), R.cols, R.rows);
-    arma::Mat<double> temp2(reinterpret_cast<double*>(t.data), t.rows, t.cols);
-    E = cv::findEssentialMat(kps1m, kps2m, this->k, RANSAC, 0.6, 1.0, mask);
-    recoverPose(E, kps1m, kps2m, this->k, R, t, mask);
-    // cout << "R:\n" << R << endl;
-    // cout << "t:\n" << t << endl;
-    E = cv::findEssentialMat(prevKpsm, currKpsm, this->k, RANSAC, 0.999, 1.0, cv::noArray());
+    E = cv::findEssentialMat(currKpsm, prevKpsm, this->k, RANSAC, 0.999, 1.0, cv::noArray());
     recoverPose(E, prevKpsm, currKpsm, this->k, R, t, cv::noArray());
-    cout << "R:\n" << R << endl;
-    cout << "t:\n" << t << endl;
+    cout << "R:\n"
+         << R << endl;
+    cout << "t:\n"
+         << t << endl;
 
     arma::Mat<double> trans(4, 4, arma::fill::eye);
     arma::Mat<double> temp1(reinterpret_cast<double *>(R.data), R.rows, R.cols);
     arma::Mat<double> temp2(reinterpret_cast<double *>(t.data), t.rows, t.cols);
-
-    cout << "temp1:\n" << temp1 << endl;
-    cout << "temp2:\n" << temp2 << endl;
+    cout << "temp1:\n"
+         << temp1 << endl;
+    cout << "temp2:\n"
+         << temp2 << endl;
 
     trans.submat(0, 0, 2, 2) = temp1.t();
     trans.submat(0, 3, 2, 3) = -temp2;
@@ -160,8 +153,8 @@ int main()
     bool showVideo = false;       // Before Running the simulation, display the input video
     bool runSim = true;           // Run the simulation
     auto IM_STYLE = IMREAD_COLOR; // The color style of images to run on simulation (IMREAD_GRAYSCALE or IMREAD_COLOR)
-    int startNum = 75;             // First Image Number to run
-    int endNum = 125;              // Last Image Number to run
+    int startNum = 75;            // First Image Number to run
+    int endNum = 125;             // Last Image Number to run
 
     // showVideo
     int imNum;
@@ -232,11 +225,11 @@ int main()
         cv::Mat k({400, 0, 400, 0, 400, 300, 0, 0, 1});
         k = k.reshape(1, {3, 3});
         State s1 = State();
-        s1.pos = {xGt[0],
-                  yGt[0],
-                  zGt[0]};
+        // s1.pos = {xGt[0],
+        //           yGt[0],
+        //           zGt[0]};
         arma::Col<double> eAngles = {rollGt[0], pitchGt[0], yawGt[0]};
-        s1.rot = Quaternion(eAngles, false);
+        // s1.rot = Quaternion(eAngles, false);
         // cout << "init rot mat:\n" << s1.rot.toRotMat() << endl;
         VisualOdometer vo = VisualOdometer(k, img, s1);
 
@@ -298,7 +291,7 @@ int main()
         yGt = vector<double>(yGt.begin() + startNum, yGt.begin() + endNum);
         zGt = vector<double>(zGt.begin() + startNum, zGt.begin() + endNum);
         plt::plot(xGt, yGt, "--b");
-        plt::plot(vector<double>(xGt.begin(), xGt.begin()+1), vector<double>(yGt.begin(), yGt.begin()+1), "r*");
+        plt::plot(vector<double>(xGt.begin(), xGt.begin() + 1), vector<double>(yGt.begin(), yGt.begin() + 1), "r*");
         plt::show();
     }
     // if(k == 's')
