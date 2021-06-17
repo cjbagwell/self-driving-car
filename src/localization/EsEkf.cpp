@@ -39,7 +39,6 @@ const arma::Col<double> G({0.0, 0.0, -9.81});
 EsEKF::EsEKF(State initialState, Row<double> initialVariance):currState(initialState){
     this->currState = initialState;
     this->pCov = diagmat(initialVariance);
-    this->qCov = diagmat(Row<double>({0.1, 0.1, 0.1, 0.1, 0.1, 0.1}));
     this->lJac = Mat<double>(9,6, fill::zeros);
     lJac.submat(3,0,8,5) = eye(6,6);
 }
@@ -72,8 +71,7 @@ State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
     fJac.submat(3,6,5,8) = -skewSemetric(rotMat * m.accelerometer) * dt;
     
     // 3. Propogate Uncertainty
-    Mat<double> var = diagmat(sensorVar) * dt*dt;
-    qCov = qCov * var;
+    Mat<double> qCov = diagmat(sensorVar * dt*dt);
     pCov = fJac * pCov * fJac.t() + lJac * qCov * lJac.t();
     
     // Debugging Info
@@ -90,8 +88,8 @@ State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
     // cout << "fJac:\n"   << fJac     << "\n";
     // cout << "lJac:\n"   << lJac     << "\n";
     // cout << "qCov:\n"   << qCov     << "\n";
-    // cout << "pCov:\n"   << pCov     << "\n";
-    // cout << endl;
+    cout << "pCov:\n"   << pCov     << "\n";
+    cout << endl;
     
     // 4. Update Filter State
     currState.pos = pCheck;

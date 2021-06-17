@@ -27,7 +27,7 @@
 class EsEKF{
 private:
     State currState, prevState;
-    arma::Mat<double> pCov, qCov, lJac;
+    arma::Mat<double> pCov, lJac;
 
 public:
     /**

@@ -39,8 +39,8 @@ public:
 
     arma::Col<double> getLocation(){
         return arma::Col<double>({
-            lon*RADIUS_EARTH,
-            -lat*RADIUS_EARTH,
+            (lon)*RADIUS_EARTH,
+            -(lat)*RADIUS_EARTH,
             alt-1
         });
     }
