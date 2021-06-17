@@ -35,6 +35,8 @@ private:
     cv::Mat k;
     State prevState;
     arma::Mat<double> prevTrans;
+    std::vector<cv::KeyPoint> prevKps;
+    cv::Mat prevDes;
     cv::Ptr<cv::FeatureDetector> detector;
     cv::Ptr<cv::DescriptorMatcher> matcher; //BFMatcher or FlannBasedMatcher
 
@@ -60,12 +62,15 @@ public:
                    k(calibMat),
                    prevImg(initImg),
                    prevState(initState),
-                   detector(cv::ORB::create(500, 1.2, 9, 31, 0, 2, cv::ORB::HARRIS_SCORE, 31, 20)),
+                   prevKps(std::vector<cv::KeyPoint>()),
+                   detector(cv::ORB::create(1000, 1.2, 9, 31, 0, 2, cv::ORB::HARRIS_SCORE, 31, 20)),
                    matcher(cv::BFMatcher::create(cv::NORM_HAMMING, true))
                    {
+        detector->detectAndCompute(prevImg, cv::noArray(), prevKps, prevDes);
         prevTrans = arma::Mat<double>(4,4, arma::fill::eye);
         prevTrans.submat(0,0,2,2) = prevState.rot.toRotMat();
         prevTrans.submat(0,3, 2, 3) = prevState.pos;
+        prevTrans = arma::inv(prevTrans);
     };
 
     void setPrevState(State prevState){this->prevState = prevState;}
@@ -79,7 +84,8 @@ public:
      * @param currImg The most recent image taken.
      * @return State - The estimated state of the vehicle at the time currImg was taken (in the Navigation Frame)
      */
-    State runStep(cv::Mat currImg);
+    State runStep(const cv::Mat& currImg);
+    // arma::Mat<double> runStep(const cv::Mat& currImg);
 };
 
 
