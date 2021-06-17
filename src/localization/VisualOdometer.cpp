@@ -42,13 +42,19 @@ State VisualOdometer::runStep(const cv::Mat &currImg)
     cv::Mat currDes;
     detector->detectAndCompute(currImg, noArray(), currKps, currDes);
 
+    // cv::Mat outIm;
+    // currImg.copyTo(outIm);
+    // cv::drawKeypoints(currImg, currKps, outIm);
+    // cv::imshow("Keypoints", outIm);
+    // waitKey(0);
+
     // Find Matching Features
     vector<DMatch> matches;
     matcher->match(this->prevDes, currDes, matches);
 
     // Filter Matches
     const float thresh = 0.7;
-    const int distThresh = 30;
+    const int distThresh = 20;
     vector<DMatch> goodMatches;
     vector<Point2f> prevKpsm, currKpsm;
     for (auto match : matches)
@@ -74,8 +80,8 @@ State VisualOdometer::runStep(const cv::Mat &currImg)
 
     // Recover Pose
     cv::Mat E, R, t, mask;
-    E = cv::findEssentialMat(currKpsm, prevKpsm, this->k, RANSAC, 0.999, 1.0, cv::noArray());
-    recoverPose(E, prevKpsm, currKpsm, this->k, R, t, cv::noArray());
+    E = cv::findEssentialMat(prevKpsm, currKpsm, this->k, LMEDS, 0.999, 2.5, mask);
+    recoverPose(E, prevKpsm, currKpsm, this->k, R, t, mask);
     cout << "R:\n"
          << R << endl;
     cout << "t:\n"
@@ -99,9 +105,9 @@ State VisualOdometer::runStep(const cv::Mat &currImg)
     arma::Col<double> p1(4, 1, arma::fill::zeros), p2(4, 1, arma::fill::ones);
     p1[3] = 1;
 
-    prevTrans = arma::inv(prevTrans) * arma::inv(trans);
+    prevTrans = prevTrans * trans;//arma::inv(trans);
     p2 = prevTrans * p1;
-    prevTrans = arma::inv(prevTrans);
+    // prevTrans = arma::inv(prevTrans);
 
     this->prevState.pos = p2.subvec(0, 2);
     this->prevImg = currImg;
@@ -191,11 +197,15 @@ int main()
         cv::Mat k({400, 0, 400, 0, 400, 300, 0, 0, 1});
         k = k.reshape(1, {3, 3});
         State s1 = State();
-        // s1.pos = {xGt[0],
-        //           yGt[0],
-        //           zGt[0]};
-        arma::Col<double> eAngles = {rollGt[0], pitchGt[0], yawGt[0]};
-        // s1.rot = Quaternion(eAngles, false);
+        s1.pos = {xGt[startNum],
+                  yGt[startNum],
+                  zGt[startNum]};
+        cout << rollGt[startNum] << "\n" << pitchGt[startNum] << "\n" << yawGt[startNum] << endl;
+
+        arma::Col<double> eAngles = {rollGt [startNum] * 3.14159 / 180, 
+                                     pitchGt[startNum] * 3.14159 / 180, 
+                                     yawGt  [startNum] * 3.14159 / 180};
+        s1.rot = Quaternion(eAngles, false);
         // cout << "init rot mat:\n" << s1.rot.toRotMat() << endl;
         VisualOdometer vo = VisualOdometer(k, img, s1);
 

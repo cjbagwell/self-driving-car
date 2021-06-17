@@ -66,14 +66,15 @@ public:
                    prevState(initState),
                    debug(debug),
                    prevKps(std::vector<cv::KeyPoint>()),
-                   detector(cv::ORB::create(1000, 1.2, 9, 31, 0, 2, cv::ORB::HARRIS_SCORE, 31, 20)),
-                   matcher(cv::BFMatcher::create(cv::NORM_HAMMING, true))
+                   detector(cv::ORB::create(2000, 1.02, 64, 31, 0, 2, cv::ORB::HARRIS_SCORE, 31, 20)),
+                //    detector(cv::SIFT::create()),
+                   matcher(cv::BFMatcher::create(cv::NORM_HAMMING, false))
                    {
         detector->detectAndCompute(prevImg, cv::noArray(), prevKps, prevDes);
         prevTrans = arma::Mat<double>(4,4, arma::fill::eye);
         prevTrans.submat(0,0,2,2) = prevState.rot.toRotMat();
         prevTrans.submat(0,3, 2, 3) = prevState.pos;
-        prevTrans = arma::inv(prevTrans);
+        // prevTrans = arma::inv(prevTrans);
     };
 
     void setPrevState(State prevState){this->prevState = prevState;}
