@@ -99,7 +99,6 @@ State VisualOdometer::runStep(const cv::Mat &currImg)
     arma::Col<double> p1(4, 1, arma::fill::zeros), p2(4, 1, arma::fill::ones);
     p1[3] = 1;
 
-
     prevTrans = arma::inv(prevTrans) * arma::inv(trans);
     p2 = prevTrans * p1;
     prevTrans = arma::inv(prevTrans);
@@ -114,40 +113,7 @@ State VisualOdometer::runStep(const cv::Mat &currImg)
 
 int main()
 {
-    std::string image_dir_path = "/home/jordan/Projects/self-driving-car/src/localization/test/images/";
-
-    cv::Mat k({640, 0, 640, 0, 480, 480, 0, 0, 1});
-    cout << k.dims << endl;
-    cout << "in main k : \n" << k << endl;
-    cv::Mat k({400, 0, 400, 0, 400, 300, 0, 0, 1});
-    cv::Mat img = imread(image_dir_path + "test_image_0.png", IMREAD_GRAYSCALE);
-
-    k = k.reshape(1, {3,3});
-    cout << k.dims << endl;
-    cout << "in main k : \n" << k << endl;
-    State s1 = State();
-    VisualOdometer vo = VisualOdometer(k, img, s1);
-    int maxNum = 500;
-    int imNum = 1;
-    vector<State> outputState(maxNum);
-    vector<double> xOut(maxNum), yOut(maxNum), zOut(maxNum);
-    while(true){
-        std::string imName = image_dir_path + "test_image_" + to_string(imNum) + ".png";
-        cout << "Image Name: " << imName << endl;
-        try{
-            img = imread(imName, IMREAD_GRAYSCALE);
-            State s2 = vo.runStep(img);
-            outputState.push_back(s2);
-            xOut.push_back(s2.pos[0]);
-            yOut.push_back(s2.pos[1]);
-            zOut.push_back(s2.pos[2]);
-            cout << "Predicted State: \n" << s2.pos << endl;
-            // plt::plot(xOut, yOut, "--r");
-            // plt::show();
-        }
-        catch(int e){
-            break;
-        }
+    std::string imageDirPath = "/home/jordan/Projects/self-driving-car/src/localization/test/images/";
 
     // Arguments
     bool showVideo = false;       // Before Running the simulation, display the input video

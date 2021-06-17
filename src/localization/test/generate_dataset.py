@@ -665,6 +665,7 @@ class CameraManager(object):
 gnss_events = []
 gt_events  = []
 imu_events  = []
+cam_events = []
 
 def gnss_callback(data, agent):
     t = data.timestamp
@@ -688,6 +689,17 @@ def imu_callback(data, agent):
     imu_events.append(data)
     gt_events.append((t, loc, vel, rot))
 
+def camera_callback(data, agent):
+    t = data.timestamp
+    if t < 5:
+        return
+    transform = agent.vehicle.get_transform()
+    loc = transform.location
+    rot = transform.rotation
+    vel = agent.vehicle.get_velocity()
+    cam_events.append(data)
+    gt_events.append((t, loc, vel, rot))
+
 
 def write_data_file(f_name, data):
     # write to file
@@ -705,7 +717,7 @@ def write_data_file(f_name, data):
     out_file.writelines(lns)
     out_file.close()
 
-def create_data_files(gnss_es, imu_es, loc_es):
+def create_data_files(gnss_es, imu_es, cam_es, loc_es):
     print("Creating data files...")
 
     # GNSS Data
@@ -756,9 +768,12 @@ def create_data_files(gnss_es, imu_es, loc_es):
     roll = []
 
     images_dir = "./images"
-    for f in os.listdir(images_dir):
-        print("removing file " + f)
-        os.remove(os.path.join(images_dir, f))
+    try:
+        for f in os.listdir(images_dir):
+            print("removing file " + f)
+            os.remove(os.path.join(images_dir, f))
+    except:
+        pass
     
     for event in cam_es:
         fname = "images/test_image_{}.png".format(im_num)
@@ -883,6 +898,7 @@ def game_loop(args):
         # Setting up sensor callbacks
         gnss.listen(lambda data: gnss_callback(data, agent))
         imu.listen(lambda data: imu_callback(data, agent))
+        camera.listen(lambda data: camera_callback(data, agent))
         clock = pygame.time.Clock()
 
         while True:
