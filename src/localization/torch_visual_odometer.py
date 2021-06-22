@@ -15,6 +15,7 @@
 
 import torch
 import torch.nn as nn
+from torchsummary import summary
 
 class Block(nn.Module):
     def __init__(self, in_channels, intermediate_channels, identity_downsample=None, stride=1):
@@ -130,8 +131,12 @@ def ResNet152(img_channels=3, num_classes=1000):
     return ResNet(Block, [3, 8, 36, 3], img_channels, num_classes)
 
 def test():
-    net = ResNet50()
-    x = torch.randn(2,3,224,224)
+    if torch.cuda.is_available():
+        print("Working with Cuda!")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # PyTorch v0.4.0
+    net = ResNet50(img_channels=6, num_classes=5).to(device)
+    summary(net, (6, 224, 224))
+    x = torch.randn([2,6,224,224], device=device)
     y = net(x).to('cuda')
     print(y.shape)
 
