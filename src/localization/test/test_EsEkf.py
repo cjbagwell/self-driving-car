@@ -1,18 +1,21 @@
-from process_data import ds_handler #type:ignore
+from process_data import DatasetHandler #type:ignore
 from py_localization import * #EsEkf, ImuMeasurement, State, quat_to_euler #type:ignore
+import os
 import numpy as np
 from matplotlib import pyplot as plt
 
+dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset01")
+ds_handler = DatasetHandler(dataset_path)
 imu_measurements = ds_handler.get_imu_measurements()
 gnss_measurements  = ds_handler.get_gnss_measurements()
-gt_measurements  = ds_handler.get_gt_measurements()
-gt_times = [state.time for state in gt_measurements]
+gt_states  = ds_handler.get_gt_states()
+gt_times = [state.time for state in gt_states]
 gns_times = [m.t for m in gnss_measurements]
 imu_time = [m.get_time() for m in imu_measurements]
 
 
 gt_index = gt_times.index(imu_measurements[0].get_time())
-init_state = gt_measurements[gt_index]
+init_state = gt_states[gt_index]
 imu_var = np.asarray([1, 1, 1, 1, 1, 1]) * 5.0
 gnss_var = np.asarray([1, 1, 1]) * 0.001
 
@@ -23,11 +26,6 @@ outputs = []
 outs_gnss = []
 gnss_index = 0
 for i in range(len(imu_measurements)):
-    if i <= 40:
-        gt_index = gt_times.index(imu_measurements[i].get_time())
-        init_state = gt_measurements[gt_index]
-        filter = EsEkf(init_state, [0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
-        continue
     out = filter.run_step(imu_measurements[i], imu_var)
     imu_t = imu_measurements[i].get_time() 
 
@@ -74,27 +72,27 @@ for out in outputs:
 
 
 # process ground truth data
-t_gt = ds_handler.gt_raw['time']
-x_gt = ds_handler.gt_raw['x']
-y_gt = ds_handler.gt_raw['y']
-z_gt = ds_handler.gt_raw['z']
-vx_gt = ds_handler.gt_raw['vx']
-vy_gt = ds_handler.gt_raw['vy']
-vz_gt = ds_handler.gt_raw['vz']
-roll_gt = ds_handler.gt_raw['roll']
-pitch_gt = ds_handler.gt_raw['pitch']
-yaw_gt = ds_handler.gt_raw['yaw']
+t_gt = ds_handler.gt_raw['times']
+x_gt = ds_handler.gt_raw['xs']
+y_gt = ds_handler.gt_raw['ys']
+z_gt = ds_handler.gt_raw['zs']
+vx_gt = ds_handler.gt_raw['vxs']
+vy_gt = ds_handler.gt_raw['vys']
+vz_gt = ds_handler.gt_raw['vzs']
+roll_gt = ds_handler.gt_raw['rolls']
+pitch_gt = ds_handler.gt_raw['pitches']
+yaw_gt = ds_handler.gt_raw['yaws']
 
 
 # process imu data
-t_imu = ds_handler.imu_raw['time']
-accel_x = ds_handler.imu_raw['accel_x']
-accel_y = ds_handler.imu_raw['accel_y']
-accel_z = ds_handler.imu_raw['accel_z']
+t_imu = ds_handler.imu_raw['times']
+accel_x = ds_handler.imu_raw['accel_xs']
+accel_y = ds_handler.imu_raw['accel_ys']
+accel_z = ds_handler.imu_raw['accel_zs']
 compas = ds_handler.imu_raw['compas']
-gyro_x = ds_handler.imu_raw['gyro_x']
-gyro_y = ds_handler.imu_raw['gyro_y']
-gyro_z = ds_handler.imu_raw['gyro_z']
+gyro_x = ds_handler.imu_raw['gyro_xs']
+gyro_y = ds_handler.imu_raw['gyro_ys']
+gyro_z = ds_handler.imu_raw['gyro_zs']
 
 
 # process gnss data

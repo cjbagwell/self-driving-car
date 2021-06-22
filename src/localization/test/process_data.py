@@ -1,236 +1,226 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
-import py_localization as loc #type:ignore 
+import cv2 as cv
+import glob
+import os
+import py_localization as loc  # type:ignore
 
 # helper functions
+
+
 def latlon2position(lat, lon):
     r_earth = 6.371*10**6
-    x =  lon * r_earth
+    x = lon * r_earth
     y = -lat * r_earth
     return x, y
+
 
 def deg2rad(angle):
     return angle * 3.14159 / 180
 
-##################################################
-# Dataset Handler
-##################################################
+
 class DatasetHandler:
-    def __init__(self):
-        self.gnss_raw = {}
-        self.gnss_data = []
-        self.imu_data = []
+    def __init__(self, dataset_dir):
+        self.dataset_dir = dataset_dir if dataset_dir[-1] == '/' else dataset_dir + '/'
         self.imu_raw = {}
-        self.gt_data = []
+        self.gnss_raw = {}
+        self.camera_raw = {}
         self.gt_raw = {}
-    
-    def set_gnss_data(self, ts, lats, lons, alts, xs, ys):
-        self.gnss_raw["times"] = ts
-        self.gnss_raw["lats"] = lats
-        self.gnss_raw["lons"] = lons
-        self.gnss_raw["alts"] = alts
-        self.gnss_raw["xs"] = xs
-        self.gnss_raw["ys"] = ys
+        self.init_imu_data()
+        self.init_gnss_data()
+        self.init_camera_data()
+        self.init_gt_data()
 
-        self.gnss_data = []
-        for t, lat, lon, alt in zip(ts, lats, lons, alts):
-            self.gnss_data.append(loc.GnssMeasurement(-1, t, alt, lat, lon))
-    
-    def set_imu_data(self, ts, accel, comp, gyro):
-        self.imu_data = []
-        time = []
-        accel_x = []
-        accel_y = []
-        accel_z = []
-        compas = []
-        gyro_x = []
-        gyro_y = []
-        gyro_z = []
+    def init_gnss_data(self):
+        data_file = open(self.dataset_dir + "GNSS_data.txt", 'r')
+        self.gnss_raw["frames"] = []
+        self.gnss_raw["times"] = []
+        self.gnss_raw["lats"] = []
+        self.gnss_raw["lons"] = []
+        self.gnss_raw["alts"] = []
+        self.gnss_raw["xs"] = []
+        self.gnss_raw["ys"] = []
 
-        for t, a, c, g in zip(ts, accel, comp, gyro):
-            self.imu_data.append(loc.ImuMeasurement(a, c, g, t))
-            time.append(t)
-            accel_x.append(a[0])
-            accel_y.append(a[1])
-            accel_z.append(a[2])
-            compas.append(c)
-            gyro_x.append(g[0])
-            gyro_y.append(g[1])
-            gyro_z.append(g[2])
-        self.imu_raw['time'] = time
-        self.imu_raw['accel_x'] = accel_x
-        self.imu_raw['accel_y'] = accel_y
-        self.imu_raw['accel_z'] = accel_z
-        self.imu_raw['compas'] = compas
-        self.imu_raw['gyro_x'] = gyro_x
-        self.imu_raw['gyro_y'] = gyro_y
-        self.imu_raw['gyro_z'] = gyro_z
+        # split data
+        lns = data_file.read().splitlines()
+        data_file.close()
+        labels = lns[0].split(',')
+        print(labels)
+        frame_index = labels.index('frame')
+        time_index = labels.index('time')
+        lat_index = labels.index('lat')
+        lon_index = labels.index('lon')
+        alt_index = labels.index('alt')
 
+        for i in range(1, len(labels)-1):
+            elems = [elem for elem in lns[i].split(',')]
+            self.gnss_raw["frames"].append(int(elems[frame_index]))
+            self.gnss_raw["times"].append(float(elems[time_index]))
+            self.gnss_raw["lats"].append(np.deg2rad(float(elems[lat_index])))
+            self.gnss_raw["lons"].append(np.deg2rad(float(elems[lon_index])))
+            self.gnss_raw["alts"].append(float(elems[alt_index]))
 
-    def set_gt_data(self, ts, locs, vels, rots):
-        xs = []
-        ys = []
-        zs = []
-        vxs = []
-        vys = []
-        vzs = []
-        roll = []
-        pitch = []
-        yaw = []
-        self.gt_data = []
-        for t, pos, vel, rot in zip(ts, locs, vels, rots):
-            quat = loc.euler_to_quat(rot)
-            state = loc.State(pos, vel, quat.as_vector(), t, -1)
-            self.gt_data.append(state)
-            xs.append(pos[0])
-            ys.append(pos[1])
-            zs.append(pos[2])
-            vxs.append(vel[0])
-            vys.append(vel[1])
-            vzs.append(vel[2])
-            roll.append(rot[0])                      
-            pitch.append(rot[1])
-            yaw.append(rot[2])
-        self.gt_raw['time'] = ts
-        self.gt_raw['x'] = xs
-        self.gt_raw['y'] = ys
-        self.gt_raw['z'] = zs
-        self.gt_raw['vx'] = vxs
-        self.gt_raw['vy'] = vys
-        self.gt_raw['vz'] = vzs
-        self.gt_raw['roll'] = roll
-        self.gt_raw['pitch'] = pitch
-        self.gt_raw['yaw'] = yaw
-    
+        # convert lat lons to positions
+        gnsp = [latlon2position(lat, lon) for lat, lon in zip(
+            self.gnss_raw["lats"], self.gnss_raw["lons"])]
+        self.gnss_raw["xs"] = [x for x, y in gnsp]
+        self.gnss_raw["ys"] = [y for x, y in gnsp]
+
+    def init_imu_data(self):
+        data_file = open(self.dataset_dir + "IMU_data.txt", 'r')
+        self.imu_raw['frames'] = []
+        self.imu_raw['times'] = []
+        self.imu_raw['accel_xs'] = []
+        self.imu_raw['accel_ys'] = []
+        self.imu_raw['accel_zs'] = []
+        self.imu_raw['compas'] = []
+        self.imu_raw['gyro_xs'] = []
+        self.imu_raw['gyro_ys'] = []
+        self.imu_raw['gyro_zs'] = []
+
+        # split data
+        lns = data_file.read().splitlines()
+        data_file.close()
+        labels = lns[0].split(',')
+        frame_index =   labels.index('frame')
+        time_index =    labels.index('time')
+        accel_x_index = labels.index('accel_x')
+        accel_y_index = labels.index('accel_y')
+        accel_z_index = labels.index('accel_z')
+        compas_index =  labels.index('compas')
+        gyro_x_index =  labels.index('gyro_x')
+        gyro_y_index =  labels.index('gyro_y')
+        gyro_z_index =  labels.index('gyro_z')
+
+        print(labels)
+        for i in range(1, len(lns)-1):
+            ln = lns[i]
+            elems = [elem for elem in ln.split(',')]
+            self.imu_raw['frames'  ].append(int(elems[frame_index]))
+            self.imu_raw['times'   ].append(float(elems[time_index]))
+            self.imu_raw['accel_xs'].append(float(elems[accel_x_index]))
+            self.imu_raw['accel_ys'].append(float(elems[accel_y_index]))
+            self.imu_raw['accel_zs'].append(float(elems[accel_z_index]))
+            self.imu_raw['compas'  ].append(float(elems[compas_index]))
+            self.imu_raw['gyro_xs' ].append(float(elems[gyro_x_index]))
+            self.imu_raw['gyro_ys' ].append(float(elems[gyro_y_index]))
+            self.imu_raw['gyro_zs' ].append(float(elems[gyro_z_index]))
+
+    def init_camera_data(self):
+        img_dir = os.path.join(self.dataset_dir, "images/")
+        self.camera_raw['frames'] = []
+        self.camera_raw['times'] = []
+        self.camera_raw['image_paths'] = []
+
+        data_file = open(self.dataset_dir + "CAMERA_data.txt", 'r')
+        lns = data_file.read().splitlines()
+        labels = lns[0].split(',')
+        print(labels)
+
+        frame_index = labels.index('frame')
+        time_index =  labels.index('time')
+        name_index =  labels.index('file_name')
+
+        data_file.close()
+        for i in range(1, len(lns)-1):
+            elems = [elem for elem in lns[i].split(',')]
+            self.camera_raw['frames'].append(int(elems[frame_index]))
+            self.camera_raw['times'].append(float(elems[time_index]))
+            self.camera_raw['image_paths'].append(
+                os.path.join(img_dir, elems[name_index]))
+
+    def init_gt_data(self):
+        data_file = open(self.dataset_dir + "GT_data.txt", 'r')
+        self.gt_raw['frames'] = []
+        self.gt_raw['times'] = []
+        self.gt_raw['xs'] = []
+        self.gt_raw['ys'] = []
+        self.gt_raw['zs'] = []
+        self.gt_raw['vxs'] = []
+        self.gt_raw['vys'] = []
+        self.gt_raw['vzs'] = []
+        self.gt_raw['rolls'] = []
+        self.gt_raw['pitches'] = []
+        self.gt_raw['yaws'] = []
+
+        # split data
+        lns = data_file.read().splitlines()
+        labels = lns[0].split(',')
+        print(labels)
+
+        frame_index =   labels.index('frame')
+        time_index =    labels.index('time')
+        x_index =       labels.index('x')
+        y_index =       labels.index('y')
+        z_index =       labels.index('z')
+        vx_index =      labels.index('vx')
+        vy_index =      labels.index('vy')
+        vz_index =      labels.index('vz')
+        roll_index =    labels.index('roll')
+        pitche_index =  labels.index('pitch')
+        yaw_index =     labels.index('yaw')
+
+        data_file.close()
+        for i in range(1, len(lns)-1):
+            elems = [elem for elem in lns[i].split(',')]
+            self.gt_raw['frames' ].append(int(elems[frame_index]))
+            self.gt_raw['times'  ].append(float(elems[time_index]))
+            self.gt_raw['xs'     ].append(float(elems[x_index]))
+            self.gt_raw['ys'     ].append(float(elems[y_index]))
+            self.gt_raw['zs'     ].append(float(elems[z_index]))
+            self.gt_raw['vxs'    ].append(float(elems[vx_index]))
+            self.gt_raw['vys'    ].append(float(elems[vy_index]))
+            self.gt_raw['vzs'    ].append(float(elems[vz_index]))
+            self.gt_raw['rolls'  ].append(np.deg2rad(float(elems[roll_index])))
+            self.gt_raw['pitches'].append(np.deg2rad(float(elems[pitche_index])))
+            self.gt_raw['yaws'   ].append(np.deg2rad(float(elems[yaw_index])))
+
     def get_gnss_measurements(self):
-        return self.gnss_data
+        gnss_measurements = []
+        for frame, t, lat, lon, alt in zip(self.gnss_raw['frames'],
+                                           self.gnss_raw['times'],
+                                           self.gnss_raw['lats'],
+                                           self.gnss_raw['lons'],
+                                           self.gnss_raw['alts']):
+            gnss_measurements.append(loc.GnssMeasurement(frame, t, alt, lat, lon))
+        return gnss_measurements
+
     def get_imu_measurements(self):
-        return self.imu_data
+        imu_measurements = []
+        for frame, t, ax, ay, az, c, gx, gy, gz in zip(self.imu_raw['frames'],
+                                     self.imu_raw['times'],
+                                     self.imu_raw['accel_xs'],
+                                     self.imu_raw['accel_ys'],
+                                     self.imu_raw['accel_zs'],
+                                     self.imu_raw['compas'],
+                                     self.imu_raw['gyro_xs'],
+                                     self.imu_raw['gyro_ys'],
+                                     self.imu_raw['gyro_zs']):
+            # TODO: implement frame in ImuMeasurement
+            imu_measurements.append(loc.ImuMeasurement([ax,ay,az], c, [gx, gy, gz], t))
 
-    def get_gt_measurements(self):
-        return self.gt_data
+        return imu_measurements
 
-ds_handler = DatasetHandler()
+    def get_gt_states(self):
+        states = []
+        for (frame, t, x, y, z, vx, vy, vz, roll, pitch, yaw) in zip(
+                                                              self.gt_raw['frames'],
+                                                              self.gt_raw['times'],
+                                                              self.gt_raw['xs'],
+                                                              self.gt_raw['ys'],
+                                                              self.gt_raw['zs'],
+                                                              self.gt_raw['vxs'],
+                                                              self.gt_raw['vys'],
+                                                              self.gt_raw['vzs'],
+                                                              self.gt_raw['rolls'],
+                                                              self.gt_raw['pitches'],
+                                                              self.gt_raw['yaws']):
+            rot = loc.Quaternion([roll, pitch, yaw], False).as_vector()
+            states.append(loc.State([x, y, z], [vx, vy, vz], rot, t, frame))
+        return states
 
-##################################################
-# Process GNSS Data
-##################################################
-data_file = open("GNSS_data.txt", 'r')
-gnss_times = []
-lats = []
-lons = []
-alts = []
+    def get_vo_training_set(self):
+        pass
 
-# split data
-lns = data_file.read().splitlines()
-data_file.close()
-for ln in lns:
-    elems = ln.split(',')
-    elems = [float(elem) for elem in elems]
-    gnss_times.append(elems[0])
-    lats.append(elems[1])
-    lons.append(elems[2])
-    alts.append(elems[3])
-
-# print(gnss_times)
-
-# convert from degrees
-lats = [np.deg2rad(lat) for lat in lats]
-lons = [np.deg2rad(lon) for lon in lons]
-
-# convert lat lons to positions
-gnsp = [latlon2position(lat, lon) for lat, lon in zip(lats, lons)]
-gnsx = [x for x, y in gnsp]
-gnsy = [y for x, y in gnsp]
-ds_handler.set_gnss_data(gnss_times, lats, lons, alts, gnsx, gnsy)
-
-##################################################
-# Process IMU Data
-##################################################
-data_file = open("IMU_data.txt", 'r')
-imu_times = []
-accel = []
-comp = []
-gyro = []
-
-# split data
-lns = data_file.read().splitlines()
-data_file.close()
-for ln in lns:
-    elems = ln.split(',')
-    elems = [float(elem) for elem in elems]
-    imu_times.append(elems[0])
-    accel.append([elems[1], elems[2], elems[3]])
-    comp.append(elems[4])
-    gyro.append([elems[5], elems[6], elems[7]])
-ds_handler.set_imu_data(imu_times, accel, comp, gyro)
-
-##################################################
-# Process GT Location Data
-##################################################
-data_file = open("GT_data.txt", 'r')
-gt_times = []
-locs = []
-vels = []
-rots = []
-
-# split data
-lns = data_file.read().splitlines()
-data_file.close()
-for ln in lns:
-    elems = ln.split(',')
-    elems = [float(elem) for elem in elems]
-    gt_times.append(elems[0])
-    locs.append([elems[1], elems[2], elems[3]])
-    vels.append([elems[4], elems[5], elems[6]])
-    rots.append([deg2rad(elems[7]), deg2rad(elems[8]), deg2rad(elems[9])])
-ds_handler.set_gt_data(gt_times, locs, vels, rots)
-
-
-
-
-
-##################################################
-# Visualize Data
-##################################################
-# xs = []
-# ys = []
-# zs = []
-# for x,y,z in accel:
-#     xs.append(x)
-#     ys.append(y)
-#     zs.append(z)
-
-# print(xs)
-# plt.plot(imu_times, xs, 'b', imu_times, ys, 'r')
-# plt.show()
-
-# gnss_times, lats, lons, gnss_xs, gnss_ys = ds_handler.get_gnss_data()
-
-# plt.figure(1)
-# plt.plot(gnss_times, gnss_xs, 'r', gnss_times, gnss_ys, 'b')
-# plt.legend(["GNSS x", "GNSS y"])
-# plt.xlabel("Time [s]")
-# plt.ylabel("Position [m]")
-# plt.draw()
-
-# gt_times, gt_xs, gt_ys, gt_zs = ds_handler.get_gt_data()
-# plt.figure(2)
-# plt.plot(gt_times, gt_xs, 'r', gt_times, gt_ys, 'b')
-# plt.legend(["GT x", "GT y",])
-# plt.xlabel("time [s]")
-# plt.ylabel("position [m]")
-# plt.draw()
-# plt.show()
-
-
-# # print(gnss_data_file.read())
-# # while True:
-# #     ln = gnss_data_file.readline()
-# #     ln.strip()
-# #     if ln != "":
-# #         elems = ln.split(',')
-# #         # print(elems)
-# #     else:
-# #         break
+    def get_vo_test_set(self):
+        pass

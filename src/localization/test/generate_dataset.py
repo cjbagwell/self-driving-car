@@ -663,19 +663,19 @@ class CameraManager(object):
             image.save_to_disk('_out/%08d' % image.frame)
 
 gnss_events = []
-gt_events  = []
+gt_events  = {}
 imu_events  = []
 cam_events = []
 
 def gnss_callback(data, agent):
     t = data.timestamp
-    if t < 5:
+    if t == 5:
         return
     transform = agent.vehicle.get_transform()
     loc = transform.location
     rot = transform.rotation
     vel = agent.vehicle.get_velocity()
-    gt_events.append((t, loc, vel, rot))
+    gt_events[data.frame] = (t, loc, vel, rot)
     gnss_events.append(data)
 
 def imu_callback(data, agent):
@@ -687,7 +687,7 @@ def imu_callback(data, agent):
     rot = transform.rotation
     vel = agent.vehicle.get_velocity()
     imu_events.append(data)
-    gt_events.append((t, loc, vel, rot))
+    gt_events[data.frame] = (t, loc, vel, rot)
 
 def camera_callback(data, agent):
     t = data.timestamp
@@ -698,13 +698,22 @@ def camera_callback(data, agent):
     rot = transform.rotation
     vel = agent.vehicle.get_velocity()
     cam_events.append(data)
-    gt_events.append((t, loc, vel, rot))
+    gt_events[data.frame] = (t, loc, vel, rot)
 
 
-def write_data_file(f_name, data):
+def write_data_file(dir, f_name, data, labels):
     # write to file
-    out_file = open(f_name, 'w')
+    out_path = os.path.join(dir, f_name)
+    out_file = open(out_path, 'w')
     lns = []
+    ln = ""
+    for label in labels:
+        ln += label
+        if label is not labels[-1]:
+            ln += ","
+    ln += "\n"
+    lns.append(ln)
+
     for d in data:
         # print(d)
         ln = ""
@@ -714,26 +723,38 @@ def write_data_file(f_name, data):
                 ln += ","
         ln += "\n"
         lns.append(ln)
+
     out_file.writelines(lns)
     out_file.close()
 
-def create_data_files(gnss_es, imu_es, cam_es, loc_es):
+def create_data_files(carla_datasets_dir, dataset_name, gnss_es, imu_es, cam_es, gt_es):
     print("Creating data files...")
+    carla_datasets_dir = os.path.join(carla_datasets_dir)
+    dataset_dir = os.path.join(carla_datasets_dir, dataset_name)
+    
+    try:
+        dataset_dir = os.mkdir(dataset_dir)
+    except:
+        pass
 
     # GNSS Data
+    gnss_frames = []
     gnss_times = []
     lats = []
     lons = []
     alts = []
     for event in gnss_es:
+        gnss_frames.append(event.frame)
         gnss_times.append(event.timestamp)
         lats.append(event.latitude)
         lons.append(event.longitude)
         alts.append(event.altitude)
-    gnss_data = zip(gnss_times, lats, lons, alts)
-    write_data_file("GNSS_data.txt", gnss_data)
+    gnss_data = zip(gnss_frames, gnss_times, lats, lons, alts)
+    labels = ['frame', 'time', 'lat', 'lon', 'alt']
+    write_data_file(dataset_dir, "GNSS_data.txt", gnss_data, labels)
 
     # IMU  Data
+    imu_frames = []
     imu_times = []
     ac_x = []
     ac_y = []
@@ -743,6 +764,7 @@ def create_data_files(gnss_es, imu_es, cam_es, loc_es):
     gy_y = []
     gy_z = []
     for event in imu_es:
+        imu_frames.append(event.frame)
         imu_times.append(event.timestamp)
         ac_x.append(event.accelerometer.x)
         ac_y.append(event.accelerometer.y)
@@ -751,23 +773,17 @@ def create_data_files(gnss_es, imu_es, cam_es, loc_es):
         gy_x.append(event.gyroscope.x)
         gy_y.append(event.gyroscope.y)
         gy_z.append(event.gyroscope.z)
-    imu_data = zip(imu_times, ac_x, ac_y, ac_z, comp, gy_x, gy_y, gy_z)
-    write_data_file("IMU_data.txt", imu_data)
+    imu_data = zip(imu_frames, imu_times, ac_x, ac_y, ac_z, comp, gy_x, gy_y, gy_z)
+    labels = ['frame', 'time', 'accel_x', 'accel_y', 'accel_z', 'compas', 'gyro_x', 'gyro_y', 'gyro_z']
+    write_data_file(dataset_dir, "IMU_data.txt", imu_data, labels)
 
     # Camera Data
     im_num = 0
-    time = []
-    locx = []
-    locy = []
-    locz = []
-    velx = []
-    vely = []
-    velz = []
-    pitch = []
-    yaw = []
-    roll = []
-
-    images_dir = "./images"
+    camera_frames = []
+    camera_times = []
+    f_names = []
+    
+    images_dir = os.path.join(dataset_dir, "images/")
     try:
         for f in os.listdir(images_dir):
             print("removing file " + f)
@@ -775,52 +791,47 @@ def create_data_files(gnss_es, imu_es, cam_es, loc_es):
     except:
         pass
     
+    num_events = len(cam_es)
     for event in cam_es:
-        fname = "images/test_image_{}.png".format(im_num)
-        event.save_to_disk(fname)
-
-        for t, loc, vel, rot in gt_events:
-            if t == event.timestamp:
-                time.append(t)
-                locx.append(loc.x)
-                locy.append(loc.y)
-                locz.append(loc.z)
-                velx.append(vel.x)
-                vely.append(vel.y)
-                velz.append(vel.z)
-                pitch.append(rot.pitch)
-                yaw.append(rot.yaw)
-                roll.append(rot.roll)
-                break
+        camera_frames.append(event.frame)
+        camera_times.append(event.timestamp)
+        fname = f"{dataset_name}_output_image_{im_num}.png"
+        f_names.append(fname)
+        event.save_to_disk(os.path.join(images_dir, fname))
         im_num += 1
-        print("im {} of {}".format(im_num, len(cam_es))) 
-    write_data_file("images/GT_Data.txt", zip(time, locx, locy, locz, velx, vely, velz, roll, pitch, yaw))
+        print("saved image {} of {}".format(im_num, num_events)) 
+    
+    labels = ['frame', 'time', 'file_name']
+    write_data_file(dataset_dir, "CAMERA_data.txt", zip(camera_frames, camera_times, f_names), labels)
 
-    # Location Data (one for each sensor event)
-    loc_times = []
-    locx = []
-    locy = []
-    locz = []
-    velx = []
-    vely = []
-    velz = []
-    pitch= []
-    yaw  = []
-    roll = []
+    # Ground Truth Data 
+    gt_frames = gt_es.keys()
+    gt_times = []
+    xs = []
+    ys = []
+    zs = []
+    vxs = []
+    vys = []
+    vzs = []
+    pitches = []
+    yaws  = []
+    rolls = []
 
-    for t, loc, vel, rot in loc_es:
-        loc_times.append(t)
-        locx.append(loc.x)
-        locy.append(loc.y)
-        locz.append(loc.z)
-        velx.append(vel.x)
-        vely.append(vel.y)
-        velz.append(vel.z)
-        pitch.append(rot.pitch)
-        yaw.append(rot.yaw)
-        roll.append(rot.roll)
-    location_data = zip(loc_times, locx, locy, locz, velx, vely, velz, roll, pitch, yaw)  
-    write_data_file("GT_data.txt", location_data)  
+    for frame in gt_frames:
+        time, pos, vel, rot = gt_es[frame]
+        gt_times.append(time)
+        xs.append(pos.x)
+        ys.append(pos.y)
+        zs.append(pos.z)
+        vxs.append(vel.x)
+        vys.append(vel.y)
+        vzs.append(vel.z)
+        pitches.append(rot.pitch)
+        yaws.append(rot.yaw)
+        rolls.append(rot.roll)
+    location_data = zip(gt_frames, gt_times, xs, ys, zs, vxs, vys, vzs, rolls, pitches, yaws)
+    labels = ['frame', 'time', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'roll', 'pitch', 'yaw']
+    write_data_file(dataset_dir, "GT_data.txt", location_data, labels)  
     print("Finished writing data files")
 
 # ==============================================================================
@@ -957,8 +968,6 @@ def game_loop(args):
 
         pygame.quit()
 
-
-
 def main():
     """Main method"""
 
@@ -1033,7 +1042,7 @@ def main():
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
         
-    create_data_files(gnss_events, imu_events, cam_events, gt_events)
+    create_data_files("/home/jordan/Datasets/CarlaDatasets/", "TestDataset01", gnss_events, imu_events, cam_events, gt_events)
 
 if __name__ == '__main__':
     main()
