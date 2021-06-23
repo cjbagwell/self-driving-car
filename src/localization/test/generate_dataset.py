@@ -669,7 +669,7 @@ cam_events = []
 
 def gnss_callback(data, agent):
     t = data.timestamp
-    if t == 5:
+    if t < 5:
         return
     transform = agent.vehicle.get_transform()
     loc = transform.location

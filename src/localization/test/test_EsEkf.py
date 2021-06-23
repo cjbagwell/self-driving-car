@@ -1,14 +1,14 @@
-from process_data import DatasetHandler #type:ignore
+from process_data import CarlaDataset #type:ignore
 from py_localization import * #EsEkf, ImuMeasurement, State, quat_to_euler #type:ignore
 import os
 import numpy as np
 from matplotlib import pyplot as plt
 
 dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset01")
-ds_handler = DatasetHandler(dataset_path)
-imu_measurements = ds_handler.get_imu_measurements()
-gnss_measurements  = ds_handler.get_gnss_measurements()
-gt_states  = ds_handler.get_gt_states()
+dh = CarlaDataset(dataset_path, load_vo_dataset=False)
+imu_measurements = dh.get_imu_measurements()
+gnss_measurements  = dh.get_gnss_measurements()
+gt_states  = dh.get_gt_states()
 gt_times = [state.time for state in gt_states]
 gns_times = [m.t for m in gnss_measurements]
 imu_time = [m.get_time() for m in imu_measurements]
@@ -72,39 +72,39 @@ for out in outputs:
 
 
 # process ground truth data
-t_gt = ds_handler.gt_raw['times']
-x_gt = ds_handler.gt_raw['xs']
-y_gt = ds_handler.gt_raw['ys']
-z_gt = ds_handler.gt_raw['zs']
-vx_gt = ds_handler.gt_raw['vxs']
-vy_gt = ds_handler.gt_raw['vys']
-vz_gt = ds_handler.gt_raw['vzs']
-roll_gt = ds_handler.gt_raw['rolls']
-pitch_gt = ds_handler.gt_raw['pitches']
-yaw_gt = ds_handler.gt_raw['yaws']
+t_gt = dh.gt_raw['times']
+x_gt = dh.gt_raw['xs']
+y_gt = dh.gt_raw['ys']
+z_gt = dh.gt_raw['zs']
+vx_gt = dh.gt_raw['vxs']
+vy_gt = dh.gt_raw['vys']
+vz_gt = dh.gt_raw['vzs']
+roll_gt = dh.gt_raw['rolls']
+pitch_gt = dh.gt_raw['pitches']
+yaw_gt = dh.gt_raw['yaws']
 
 
 # process imu data
-t_imu = ds_handler.imu_raw['times']
-accel_x = ds_handler.imu_raw['accel_xs']
-accel_y = ds_handler.imu_raw['accel_ys']
-accel_z = ds_handler.imu_raw['accel_zs']
-compas = ds_handler.imu_raw['compas']
-gyro_x = ds_handler.imu_raw['gyro_xs']
-gyro_y = ds_handler.imu_raw['gyro_ys']
-gyro_z = ds_handler.imu_raw['gyro_zs']
+t_imu = dh.imu_raw['times']
+accel_x = dh.imu_raw['accel_xs']
+accel_y = dh.imu_raw['accel_ys']
+accel_z = dh.imu_raw['accel_zs']
+compas = dh.imu_raw['compas']
+gyro_x = dh.imu_raw['gyro_xs']
+gyro_y = dh.imu_raw['gyro_ys']
+gyro_z = dh.imu_raw['gyro_zs']
 
 
 # process gnss data
-t_gnss = ds_handler.gnss_raw['times']
-x_gnss = ds_handler.gnss_raw['xs']
-y_gnss = ds_handler.gnss_raw['ys']
+t_gnss = dh.gnss_raw['times']
+x_gnss = dh.gnss_raw['xs']
+y_gnss = dh.gnss_raw['ys']
 x_meas = [gnss_2_position(m)[0] for m in gnss_measurements]
 y_meas = [gnss_2_position(m)[1] for m in gnss_measurements]
 z_meas = [gnss_2_position(m)[2] for m in gnss_measurements]
-alt_gnss = ds_handler.gnss_raw['alts']
-lat_gnss = ds_handler.gnss_raw['lats']
-lon_gnss = ds_handler.gnss_raw['lons']
+alt_gnss = dh.gnss_raw['alts']
+lat_gnss = dh.gnss_raw['lats']
+lon_gnss = dh.gnss_raw['lons']
 
 
 # plot position
