@@ -1,8 +1,11 @@
-from process_data import CarlaDataset #type:ignore
-from py_localization import * #EsEkf, ImuMeasurement, State, quat_to_euler #type:ignore
 import os
+import sys
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+
+sys.path.append(os.path.join("/home/jordan/Projects/self-driving-car/"))
+from src.localization.test.CarlaDataset import CarlaDataset #type:ignore
+from build.src.localization.py_localization import EsEkf, gnss_2_position, ImuMeasurement, State, quat_to_euler #type:ignore
 
 dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset01")
 dh = CarlaDataset(dataset_path, load_vo_dataset=False)

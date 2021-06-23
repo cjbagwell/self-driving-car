@@ -1,21 +1,10 @@
-"""
-    Network Structure Rough Draft:
-
-    CONV3_STRIDE = 1
-    CONV3_PADDING = 1
-
-    2 color images as inputs: (800 x 600 x 6)
-
-    conv3 layer 64
-    conv3 layer 64 x (3 x 3 x K) --> (800 x 600 x 64)
-    conv3 layer 64 x (3 x 3 x 64)--> (800 x 600 x 64)
-
-"""
-
-
 import torch
 import torch.nn as nn
 from torchsummary import summary
+import sys
+import os
+sys.path.append(os.path.join("/home/jordan/Projects/self-driving-car/"))
+from src.localization.test.process_data import CarlaDataset
 
 class VoNet(nn.Module):
     def __init__(self, n_channels, n_images):
