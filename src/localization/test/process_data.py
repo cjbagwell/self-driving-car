@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
-import glob
+import random
+import math
 import os
+import torch
 import py_localization as loc  # type:ignore
 
 # helper functions
@@ -82,29 +84,29 @@ class DatasetHandler:
         lns = data_file.read().splitlines()
         data_file.close()
         labels = lns[0].split(',')
-        frame_index =   labels.index('frame')
-        time_index =    labels.index('time')
+        frame_index = labels.index('frame')
+        time_index = labels.index('time')
         accel_x_index = labels.index('accel_x')
         accel_y_index = labels.index('accel_y')
         accel_z_index = labels.index('accel_z')
-        compas_index =  labels.index('compas')
-        gyro_x_index =  labels.index('gyro_x')
-        gyro_y_index =  labels.index('gyro_y')
-        gyro_z_index =  labels.index('gyro_z')
+        compas_index = labels.index('compas')
+        gyro_x_index = labels.index('gyro_x')
+        gyro_y_index = labels.index('gyro_y')
+        gyro_z_index = labels.index('gyro_z')
 
         print(labels)
         for i in range(1, len(lns)-1):
             ln = lns[i]
             elems = [elem for elem in ln.split(',')]
-            self.imu_raw['frames'  ].append(int(elems[frame_index]))
-            self.imu_raw['times'   ].append(float(elems[time_index]))
+            self.imu_raw['frames'].append(int(elems[frame_index]))
+            self.imu_raw['times'].append(float(elems[time_index]))
             self.imu_raw['accel_xs'].append(float(elems[accel_x_index]))
             self.imu_raw['accel_ys'].append(float(elems[accel_y_index]))
             self.imu_raw['accel_zs'].append(float(elems[accel_z_index]))
-            self.imu_raw['compas'  ].append(float(elems[compas_index]))
-            self.imu_raw['gyro_xs' ].append(float(elems[gyro_x_index]))
-            self.imu_raw['gyro_ys' ].append(float(elems[gyro_y_index]))
-            self.imu_raw['gyro_zs' ].append(float(elems[gyro_z_index]))
+            self.imu_raw['compas'].append(float(elems[compas_index]))
+            self.imu_raw['gyro_xs'].append(float(elems[gyro_x_index]))
+            self.imu_raw['gyro_ys'].append(float(elems[gyro_y_index]))
+            self.imu_raw['gyro_zs'].append(float(elems[gyro_z_index]))
 
     def init_camera_data(self):
         img_dir = os.path.join(self.dataset_dir, "images/")
@@ -118,8 +120,8 @@ class DatasetHandler:
         print(labels)
 
         frame_index = labels.index('frame')
-        time_index =  labels.index('time')
-        name_index =  labels.index('file_name')
+        time_index = labels.index('time')
+        name_index = labels.index('file_name')
 
         data_file.close()
         for i in range(1, len(lns)-1):
@@ -148,32 +150,33 @@ class DatasetHandler:
         labels = lns[0].split(',')
         print(labels)
 
-        frame_index =   labels.index('frame')
-        time_index =    labels.index('time')
-        x_index =       labels.index('x')
-        y_index =       labels.index('y')
-        z_index =       labels.index('z')
-        vx_index =      labels.index('vx')
-        vy_index =      labels.index('vy')
-        vz_index =      labels.index('vz')
-        roll_index =    labels.index('roll')
-        pitche_index =  labels.index('pitch')
-        yaw_index =     labels.index('yaw')
+        frame_index = labels.index('frame')
+        time_index = labels.index('time')
+        x_index = labels.index('x')
+        y_index = labels.index('y')
+        z_index = labels.index('z')
+        vx_index = labels.index('vx')
+        vy_index = labels.index('vy')
+        vz_index = labels.index('vz')
+        roll_index = labels.index('roll')
+        pitche_index = labels.index('pitch')
+        yaw_index = labels.index('yaw')
 
         data_file.close()
         for i in range(1, len(lns)-1):
             elems = [elem for elem in lns[i].split(',')]
-            self.gt_raw['frames' ].append(int(elems[frame_index]))
-            self.gt_raw['times'  ].append(float(elems[time_index]))
-            self.gt_raw['xs'     ].append(float(elems[x_index]))
-            self.gt_raw['ys'     ].append(float(elems[y_index]))
-            self.gt_raw['zs'     ].append(float(elems[z_index]))
-            self.gt_raw['vxs'    ].append(float(elems[vx_index]))
-            self.gt_raw['vys'    ].append(float(elems[vy_index]))
-            self.gt_raw['vzs'    ].append(float(elems[vz_index]))
-            self.gt_raw['rolls'  ].append(np.deg2rad(float(elems[roll_index])))
-            self.gt_raw['pitches'].append(np.deg2rad(float(elems[pitche_index])))
-            self.gt_raw['yaws'   ].append(np.deg2rad(float(elems[yaw_index])))
+            self.gt_raw['frames'].append(int(elems[frame_index]))
+            self.gt_raw['times'].append(float(elems[time_index]))
+            self.gt_raw['xs'].append(float(elems[x_index]))
+            self.gt_raw['ys'].append(float(elems[y_index]))
+            self.gt_raw['zs'].append(float(elems[z_index]))
+            self.gt_raw['vxs'].append(float(elems[vx_index]))
+            self.gt_raw['vys'].append(float(elems[vy_index]))
+            self.gt_raw['vzs'].append(float(elems[vz_index]))
+            self.gt_raw['rolls'].append(np.deg2rad(float(elems[roll_index])))
+            self.gt_raw['pitches'].append(
+                np.deg2rad(float(elems[pitche_index])))
+            self.gt_raw['yaws'].append(np.deg2rad(float(elems[yaw_index])))
 
     def get_gnss_measurements(self):
         gnss_measurements = []
@@ -182,45 +185,102 @@ class DatasetHandler:
                                            self.gnss_raw['lats'],
                                            self.gnss_raw['lons'],
                                            self.gnss_raw['alts']):
-            gnss_measurements.append(loc.GnssMeasurement(frame, t, alt, lat, lon))
+            gnss_measurements.append(
+                loc.GnssMeasurement(frame, t, alt, lat, lon))
         return gnss_measurements
 
     def get_imu_measurements(self):
         imu_measurements = []
         for frame, t, ax, ay, az, c, gx, gy, gz in zip(self.imu_raw['frames'],
-                                     self.imu_raw['times'],
-                                     self.imu_raw['accel_xs'],
-                                     self.imu_raw['accel_ys'],
-                                     self.imu_raw['accel_zs'],
-                                     self.imu_raw['compas'],
-                                     self.imu_raw['gyro_xs'],
-                                     self.imu_raw['gyro_ys'],
-                                     self.imu_raw['gyro_zs']):
+                                                       self.imu_raw['times'],
+                                                       self.imu_raw['accel_xs'],
+                                                       self.imu_raw['accel_ys'],
+                                                       self.imu_raw['accel_zs'],
+                                                       self.imu_raw['compas'],
+                                                       self.imu_raw['gyro_xs'],
+                                                       self.imu_raw['gyro_ys'],
+                                                       self.imu_raw['gyro_zs']):
             # TODO: implement frame in ImuMeasurement
-            imu_measurements.append(loc.ImuMeasurement([ax,ay,az], c, [gx, gy, gz], t))
+            imu_measurements.append(loc.ImuMeasurement(
+                [ax, ay, az], c, [gx, gy, gz], t))
 
         return imu_measurements
 
     def get_gt_states(self):
         states = []
         for (frame, t, x, y, z, vx, vy, vz, roll, pitch, yaw) in zip(
-                                                              self.gt_raw['frames'],
-                                                              self.gt_raw['times'],
-                                                              self.gt_raw['xs'],
-                                                              self.gt_raw['ys'],
-                                                              self.gt_raw['zs'],
-                                                              self.gt_raw['vxs'],
-                                                              self.gt_raw['vys'],
-                                                              self.gt_raw['vzs'],
-                                                              self.gt_raw['rolls'],
-                                                              self.gt_raw['pitches'],
-                                                              self.gt_raw['yaws']):
+            self.gt_raw['frames'],
+            self.gt_raw['times'],
+            self.gt_raw['xs'],
+            self.gt_raw['ys'],
+            self.gt_raw['zs'],
+            self.gt_raw['vxs'],
+            self.gt_raw['vys'],
+            self.gt_raw['vzs'],
+            self.gt_raw['rolls'],
+            self.gt_raw['pitches'],
+                self.gt_raw['yaws']):
             rot = loc.Quaternion([roll, pitch, yaw], False).as_vector()
             states.append(loc.State([x, y, z], [vx, vy, vz], rot, t, frame))
         return states
 
-    def get_vo_training_set(self):
-        pass
+    def get_vo_data_set(self):
+        gt_states = self.get_gt_states()
+        examples = []
 
+        # Process First Frame
+        frame = self.camera_raw['frames'][0]
+        img_path = self.camera_raw['image_paths'][0]
+        img_prev = cv.imread(img_path, cv.IMREAD_COLOR)
+        state_index = self.gt_raw['frames'].index(frame)
+        prev_state = gt_states[state_index]
+        prev_state_vec = np.array([prev_state.get_position(),
+                                   prev_state.get_velocity(),
+                                   loc.quat_to_euler(prev_state.rot)]).reshape(9, 1)
+        prev_state_vec = torch.from_numpy(prev_state_vec)
+        
+        # Process all other frames
+        for i in range(1, len(self.camera_raw['frames']) - 1):
+            frame = self.camera_raw['frames'][i]
+            img_path = self.camera_raw['image_paths'][i]
+            img = cv.imread(img_path, cv.IMREAD_COLOR)
+            
+            gt_index = self.gt_raw['frames'].index(frame)
+            state = gt_states[gt_index]
+            state_vec = np.array([state.get_position(),
+                                  state.get_velocity(),
+                                  loc.quat_to_euler(state.rot)]).reshape(9, 1)
+            state_vec = torch.from_numpy(state_vec)
+
+            # Construct input volume for example
+            input_volume = np.ndarray((img.shape[0], img.shape[1], 2*img.shape[2]))
+            input_volume[:,:,0:3] = np.asarray(img)
+            input_volume[:,:,3: ] = np.asarray(img_prev)
+            input_volume = torch.from_numpy(input_volume)
+            examples.append((input_volume, prev_state_vec, state_vec))
+
+            # Update loop variables
+            img_prev = img
+            prev_state_vec = state_vec
+
+        # Split into Training and Test Sets
+        random.seed(0)
+        random.shuffle(examples)
+        split_index = math.ceil(len(examples) * 0.8)
+        train_examples = examples[0:split_index]
+        test_examples = examples[split_index:]
+        print(f"examples len: {len(examples)}")
+        print(f"training len: {len(train_examples)}")
+        print(f"test len: {len(test_examples)}")
+        # print(f"finished processing {len(examples)} examples.")
+        return examples
+    
     def get_vo_test_set(self):
         pass
+
+def test():
+    dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset01")
+    ds_handler = DatasetHandler(dataset_path)
+    ds_handler.get_vo_data_set()
+
+test()

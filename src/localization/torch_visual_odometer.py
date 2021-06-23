@@ -88,7 +88,7 @@ class VoNet(nn.Module):
 def test_VoNet():
     IMG_WIDTH = 800         # width of image (x)
     IMG_HEIGHT = 600        # height of image (y)
-    IMG_CHANNELS = 1        # number of channels per image (k)
+    IMG_CHANNELS = 3        # number of channels per image (k)
     NUM_IMG_EXAMPLE = 2     # number of images per example
     NUM_EXAMPLES = 5        # number of examples
     
