@@ -886,25 +886,30 @@ def game_loop(args):
             agent.set_destination(agent.vehicle.get_location(), destination, clean=True)
         
         # load sensors
+        sensors = []
         cworld = client.get_world()
         bp_lib = cworld.get_blueprint_library()
+
         camera_bp = bp_lib.find('sensor.camera.rgb')
         camera = cworld.spawn_actor(
             blueprint=camera_bp,
             transform=carla.Transform(carla.Location(x=1.6, z=1.6)),
             attach_to=agent.vehicle)
-        
+        sensors.append(camera)
+
         gnss_bp = bp_lib.find('sensor.other.gnss')
         gnss = cworld.spawn_actor(
             blueprint=gnss_bp,
             transform=carla.Transform(carla.Location(x=0, y=0, z=1)),
             attach_to=agent.vehicle)
+        sensors.append(gnss)
 
         imu_bp = bp_lib.find('sensor.other.imu')
         imu = cworld.spawn_actor(
             blueprint=imu_bp,
             transform=carla.Transform(carla.Location(x=0, y=0, z=1)),
             attach_to=agent.vehicle)
+        sensors.append(imu)
 
         # Setting up sensor callbacks
         gnss.listen(lambda data: gnss_callback(data, agent))
@@ -963,6 +968,8 @@ def game_loop(args):
                 world.player.apply_control(control)
 
     finally:
+        for sensor in sensors:
+            sensor.destroy()
         if world is not None:
             world.destroy()
 
