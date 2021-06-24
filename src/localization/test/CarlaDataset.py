@@ -43,7 +43,7 @@ class CarlaDataset(Dataset):
         self.init_gt_data()
         if load_vo_dataset:
             self.init_vo_data()
-
+    
     def init_gnss_data(self):
         data_file = open(self.dataset_dir + "GNSS_data.txt", 'r')
         self.gnss_raw["frames"  ] = []
@@ -191,13 +191,14 @@ class CarlaDataset(Dataset):
         frame = self.camera_raw['frames'][0]
         img_path = self.camera_raw['image_paths'][0]
         img_prev = cv.imread(img_path, cv.IMREAD_COLOR)
+        print(type(img_prev[0, 0, 0]))
         state_index = self.gt_raw['frames'].index(frame)
         prev_state = gt_states[state_index]
         prev_state_vec = torch.as_tensor([prev_state.get_position(),
                                    prev_state.get_velocity(),
                                    loc.quat_to_euler(prev_state.rot)]).reshape(9, 1)
 
-        self.vo_raw['images']       = torch.zeros(num_frames, *img_prev.shape[0:2], 2*img_prev.shape[2])
+        self.vo_raw['images']       = torch.zeros(num_frames, *img_prev.shape[0:2], 2*img_prev.shape[2], dtype=torch.uint8)
         self.vo_raw['input_state']  = torch.zeros(num_frames, *prev_state_vec.shape)
         self.vo_raw['out_state']    = torch.zeros(num_frames, *prev_state_vec.shape)
 
@@ -214,9 +215,9 @@ class CarlaDataset(Dataset):
                                   loc.quat_to_euler(state.rot)]).reshape(9, 1)
 
             # Construct input volume for example
-            input_volume = torch.zeros(img.shape[0], img.shape[1], 2*img.shape[2])
-            input_volume[:,:,0:3] = torch.as_tensor(img)
-            input_volume[:,:,3: ] = torch.as_tensor(img_prev)
+            input_volume = torch.zeros(img.shape[0], img.shape[1], 2*img.shape[2], dtype=torch.uint8)
+            input_volume[:,:,0:3] = torch.as_tensor(img, dtype=torch.uint8)
+            input_volume[:,:,3: ] = torch.as_tensor(img_prev, dtype=torch.uint8)
             
             self.vo_raw['images'     ][i, :, :, :] = input_volume
             self.vo_raw['input_state'][i, :] = prev_state_vec

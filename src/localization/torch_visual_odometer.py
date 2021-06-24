@@ -1,10 +1,13 @@
 import torch
 import torch.nn as nn
 from torchsummary import summary
+import matplotlib.pyplot as plt
 import sys
 import os
+import cv2 as cv
+
 sys.path.append(os.path.join("/home/jordan/Projects/self-driving-car/"))
-from src.localization.test.process_data import CarlaDataset
+from src.localization.test.CarlaDataset import CarlaDataset
 
 class VoNet(nn.Module):
     def __init__(self, n_channels, n_images):
@@ -74,6 +77,13 @@ class VoNet(nn.Module):
         x = self.fc4(x)
         return x
 
+dataset = CarlaDataset("/home/jordan/Datasets/CarlaDatasets/TestDataset01")
+img, in_state, out_state = dataset[10]
+print(f"shape img {img.shape}")
+cv.imshow('input img', img[:, :, 0:3].numpy())
+cv.waitKey(10000)
+print(f"input_state: {in_state}\noutput_state: {out_state}")
+
 def test_VoNet():
     IMG_WIDTH = 800         # width of image (x)
     IMG_HEIGHT = 600        # height of image (y)
@@ -97,7 +107,7 @@ def test_VoNet():
     y = net(x).to(device)
     print(y.shape)
 
-test_VoNet()
+# test_VoNet()
 
 
 
