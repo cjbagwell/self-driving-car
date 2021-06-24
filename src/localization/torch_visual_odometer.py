@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
 from torchsummary import summary
 import matplotlib.pyplot as plt
 import sys
@@ -78,16 +79,19 @@ class VoNet(nn.Module):
         return x
 
 dataset = CarlaDataset("/home/jordan/Datasets/CarlaDatasets/TestDataset01")
-img, in_state, out_state = dataset[10]
-print(f"shape img {img.shape}")
-cv.imshow('input img', img[:, :, 0:3].numpy())
+dataloader = DataLoader(dataset=dataset, batch_size=4, shuffle=True, num_workers=2)
+data_iter = iter(dataloader)
+data = data_iter.next()
+
+img, in_state, out_state = data
+cv.imshow('input img', img[0, 0:3].numpy().reshape(600,800,3))
 cv.waitKey(10000)
 print(f"input_state: {in_state}\noutput_state: {out_state}")
 
 def test_VoNet():
-    IMG_WIDTH = 800         # width of image (x)
-    IMG_HEIGHT = 600        # height of image (y)
-    IMG_CHANNELS = 3        # number of channels per image (k)
+    IMG_WIDTH = 800         # width of image
+    IMG_HEIGHT = 600        # height of image
+    IMG_CHANNELS = 3        # number of channels per image
     NUM_IMG_EXAMPLE = 2     # number of images per example
     NUM_EXAMPLES = 5        # number of examples
     
@@ -100,15 +104,14 @@ def test_VoNet():
     
     # init net and print summary
     net = VoNet(IMG_CHANNELS, NUM_IMG_EXAMPLE).to(device)
-    summary(net, (IMG_CHANNELS*NUM_IMG_EXAMPLE, IMG_WIDTH, IMG_HEIGHT))
+    summary(net, (IMG_CHANNELS*NUM_IMG_EXAMPLE, IMG_HEIGHT, IMG_WIDTH))
 
     # run example and examine output shape
-    x = torch.randn([NUM_EXAMPLES, IMG_CHANNELS*NUM_IMG_EXAMPLE, IMG_WIDTH, IMG_HEIGHT], device=device)
+    x = img.to(device)
     y = net(x).to(device)
     print(y.shape)
 
-# test_VoNet()
-
+test_VoNet()
 
 
 

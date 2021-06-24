@@ -191,14 +191,15 @@ class CarlaDataset(Dataset):
         frame = self.camera_raw['frames'][0]
         img_path = self.camera_raw['image_paths'][0]
         img_prev = cv.imread(img_path, cv.IMREAD_COLOR)
-        print(type(img_prev[0, 0, 0]))
+        img_prev = img_prev.reshape(img_prev.shape[2], img_prev.shape[0], img_prev.shape[1])
+        print(f"img_prev_shape (carlaDataset) :{img_prev.shape}")
         state_index = self.gt_raw['frames'].index(frame)
         prev_state = gt_states[state_index]
         prev_state_vec = torch.as_tensor([prev_state.get_position(),
                                    prev_state.get_velocity(),
                                    loc.quat_to_euler(prev_state.rot)]).reshape(9, 1)
 
-        self.vo_raw['images']       = torch.zeros(num_frames, *img_prev.shape[0:2], 2*img_prev.shape[2], dtype=torch.uint8)
+        self.vo_raw['images']       = torch.zeros(num_frames, 2*img_prev.shape[0], *img_prev.shape[1:], dtype=torch.uint8)
         self.vo_raw['input_state']  = torch.zeros(num_frames, *prev_state_vec.shape)
         self.vo_raw['out_state']    = torch.zeros(num_frames, *prev_state_vec.shape)
 
@@ -207,6 +208,7 @@ class CarlaDataset(Dataset):
             frame = self.camera_raw['frames'][i]
             img_path = self.camera_raw['image_paths'][i]
             img = cv.imread(img_path, cv.IMREAD_COLOR)
+            img = img.reshape(img.shape[2], img.shape[0], img.shape[1])
             
             gt_index = self.gt_raw['frames'].index(frame)
             state = gt_states[gt_index]
@@ -215,9 +217,10 @@ class CarlaDataset(Dataset):
                                   loc.quat_to_euler(state.rot)]).reshape(9, 1)
 
             # Construct input volume for example
-            input_volume = torch.zeros(img.shape[0], img.shape[1], 2*img.shape[2], dtype=torch.uint8)
-            input_volume[:,:,0:3] = torch.as_tensor(img, dtype=torch.uint8)
-            input_volume[:,:,3: ] = torch.as_tensor(img_prev, dtype=torch.uint8)
+            input_volume = torch.zeros(2*img.shape[0], img.shape[1], img.shape[2], dtype=torch.uint8)
+            # print(f"input_vol_shape: {input_volume.shape}")
+            input_volume[0:3,:,:] = torch.as_tensor(img, dtype=torch.uint8)
+            input_volume[3: ,:,:] = torch.as_tensor(img_prev, dtype=torch.uint8)
             
             self.vo_raw['images'     ][i, :, :, :] = input_volume
             self.vo_raw['input_state'][i, :] = prev_state_vec
@@ -226,7 +229,7 @@ class CarlaDataset(Dataset):
             # Update loop variables
             img_prev = img
             prev_state_vec = state_vec
-
+        print(f"vo_raw['images'].shape: {self.vo_raw['images'].shape}")
         self.num_vo_frames = self.vo_raw['images'].shape[0]
         return 
 
@@ -284,8 +287,8 @@ class CarlaDataset(Dataset):
             states.append(loc.State([x, y, z], [vx, vy, vz], rot, t, frame))
         return states
 
-# def test():
-#     dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset01")
-#     ds_handler = CarlaDataset(dataset_path)
+def test():
+    dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset01")
+    ds_handler = CarlaDataset(dataset_path)
 
-# test()
+test()
