@@ -10,6 +10,14 @@ import cv2 as cv
 sys.path.append(os.path.join("/home/jordan/Projects/self-driving-car/"))
 from src.localization.test.CarlaDataset import CarlaDataset
 
+if torch.cuda.is_available():
+    print("Working with Cuda! :D")
+    device = torch.device("cuda")
+else:
+    print("Working with Cpu :(")
+    device = torch.device("cpu")
+
+# Define Model
 class VoNet(nn.Module):
     def __init__(self, n_channels, n_images):
         super(VoNet, self).__init__()
@@ -35,13 +43,12 @@ class VoNet(nn.Module):
 
         self.relu = nn.ReLU()
 
-        self.fc1 = nn.Linear(3840, 1000)
+        self.fc1 = nn.Linear(22528, 1000)
         self.fc2 = nn.Linear(1000, 100)
         self.fc3 = nn.Linear(100, 50)
-        self.fc4 = nn.Linear(50, 10)
+        self.fc4 = nn.Linear(50, 9)
     
     def forward(self, x):
-        print(f"in forward with x of shape{x.shape}")
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -71,26 +78,18 @@ class VoNet(nn.Module):
         x = self.bn7(x)
         x = self.relu(x)
 
-        x = torch.flatten(x)
+        x = x.view(-1, 256*8*11)
         x = self.fc1(x)
         x = self.fc2(x)
         x = self.fc3(x)
         x = self.fc4(x)
         return x
 
+# Load Data
 dataset = CarlaDataset("/home/jordan/Datasets/CarlaDatasets/TestDataset01")
 dataloader = DataLoader(dataset=dataset, batch_size=4, shuffle=True, num_workers=2)
-data_iter = iter(dataloader)
-data = data_iter.next()
 
-ims, in_state, out_state = data
-print(f"ims shape: {ims.shape}")
-img = torch.zeros(3, 600, 800, dtype=torch.uint8)
-img.copy_(ims[0, 0:3])
-cv.imshow('input img', img.numpy().reshape(600,800,3))
-cv.waitKey(10000)
-print(f"input_state: {in_state}\noutput_state: {out_state}")
-
+# Test Model
 def test_VoNet():
     IMG_WIDTH = 800         # width of image
     IMG_HEIGHT = 600        # height of image
@@ -98,28 +97,52 @@ def test_VoNet():
     NUM_IMG_EXAMPLE = 2     # number of images per example
     NUM_EXAMPLES = 5        # number of examples
     
-    if torch.cuda.is_available():
-        print("Working with Cuda! :D")
-        device = torch.device("cuda")
-    else:
-        print("Working with Cpu :(")
-        device = torch.device("cpu")
+    # show image
+    ims, out_state = iter(dataloader).next()
+    print(f"ims shape: {ims.shape}")
+    print(f"output_state: {out_state}")
+    img = torch.zeros(3, 600, 800, dtype=torch.uint8)
+    img.copy_(ims[0, 0:3])
+    plt.imshow(img.reshape(600, 800, 3))
+    plt.show()
     
     # init net and print summary
     net = VoNet(IMG_CHANNELS, NUM_IMG_EXAMPLE).to(device)
     summary(net, (IMG_CHANNELS*NUM_IMG_EXAMPLE, IMG_HEIGHT, IMG_WIDTH))
 
     # run example and examine output shape
-    print(ims)
-    x = ims.to(device)
+    x = ims.to(dtype=torch.float32).to(device)
     y = net(x).to(device)
-    print(y.shape)
 
-test_VoNet()
+# test_VoNet()
 
+# Train Model
+model = VoNet(3, 2).to(device=device)
 
+criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+num_epochs = 10
+n_total_steps = len(dataloader)
 
+print("starting training")
+for epoch in range(num_epochs):
+    for i, (images, labels) in enumerate(dataloader):
+        images = images.to(dtype=torch.float32, device=device)
+        labels = labels.to(device)
 
+        # Forward pass
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+
+        # Backward and optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if (i+1) % 100 == 0:
+            print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}, dx pred: {outputs[0,0].item():.4f}')
+
+print('Finished Training')
 
 
 
