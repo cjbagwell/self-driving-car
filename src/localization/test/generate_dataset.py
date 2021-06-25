@@ -671,34 +671,38 @@ def gnss_callback(data, agent):
     t = data.timestamp
     if t < 5:
         return
-    transform = agent.vehicle.get_transform()
-    loc = transform.location
-    rot = transform.rotation
-    vel = agent.vehicle.get_velocity()
-    gt_events[data.frame] = (t, loc, vel, rot)
     gnss_events.append(data)
+    if data.frame not in gt_events:
+        transform = agent.vehicle.get_transform()
+        loc = transform.location
+        rot = transform.rotation
+        vel = agent.vehicle.get_velocity()
+        gt_events[data.frame] = (t, loc, vel, rot)
+    
 
 def imu_callback(data, agent):
     t = data.timestamp
     if t < 5:
         return
-    transform = agent.vehicle.get_transform()
-    loc = transform.location
-    rot = transform.rotation
-    vel = agent.vehicle.get_velocity()
-    imu_events.append(data)
-    gt_events[data.frame] = (t, loc, vel, rot)
+    if data.frame not in gt_events:
+        transform = agent.vehicle.get_transform()
+        loc = transform.location
+        rot = transform.rotation
+        vel = agent.vehicle.get_velocity()
+        imu_events.append(data)
+        gt_events[data.frame] = (t, loc, vel, rot)
 
 def camera_callback(data, agent):
     t = data.timestamp
     if t < 5:
         return
-    transform = agent.vehicle.get_transform()
-    loc = transform.location
-    rot = transform.rotation
-    vel = agent.vehicle.get_velocity()
     cam_events.append(data)
-    gt_events[data.frame] = (t, loc, vel, rot)
+    if data.frame not in gt_events:
+        transform = agent.vehicle.get_transform()
+        loc = transform.location
+        rot = transform.rotation
+        vel = agent.vehicle.get_velocity()
+        gt_events[data.frame] = (t, loc, vel, rot)
 
 
 def write_data_file(dir, f_name, data, labels):

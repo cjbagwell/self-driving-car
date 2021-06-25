@@ -83,8 +83,11 @@ dataloader = DataLoader(dataset=dataset, batch_size=4, shuffle=True, num_workers
 data_iter = iter(dataloader)
 data = data_iter.next()
 
-img, in_state, out_state = data
-cv.imshow('input img', img[0, 0:3].numpy().reshape(600,800,3))
+ims, in_state, out_state = data
+print(f"ims shape: {ims.shape}")
+img = torch.zeros(3, 600, 800, dtype=torch.uint8)
+img.copy_(ims[0, 0:3])
+cv.imshow('input img', img.numpy().reshape(600,800,3))
 cv.waitKey(10000)
 print(f"input_state: {in_state}\noutput_state: {out_state}")
 
@@ -107,7 +110,8 @@ def test_VoNet():
     summary(net, (IMG_CHANNELS*NUM_IMG_EXAMPLE, IMG_HEIGHT, IMG_WIDTH))
 
     # run example and examine output shape
-    x = img.to(device)
+    print(ims)
+    x = ims.to(device)
     y = net(x).to(device)
     print(y.shape)
 

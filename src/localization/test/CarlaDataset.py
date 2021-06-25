@@ -6,6 +6,7 @@ import math
 import sys
 import os
 import torch
+from torch._C import dtype
 from torch.utils.data import Dataset, DataLoader
 
 sys.path.append(os.path.join("/home/jordan/Projects/self-driving-car"))
@@ -20,11 +21,6 @@ def latlon2position(lat, lon):
     x = lon * r_earth
     y = -lat * r_earth
     return x, y
-
-
-def deg2rad(angle):
-    return angle * 3.14159 / 180
-
 
 class CarlaDataset(Dataset):
     def __init__(self, dataset_dir, load_vo_dataset=True):
@@ -185,58 +181,73 @@ class CarlaDataset(Dataset):
 
     def init_vo_data(self):
         gt_states = self.get_gt_states()
-
-        # Process First Frame
         num_frames = len(self.camera_raw['frames'])
-        frame = self.camera_raw['frames'][0]
-        img_path = self.camera_raw['image_paths'][0]
-        img_prev = cv.imread(img_path, cv.IMREAD_COLOR)
-        img_prev = img_prev.reshape(img_prev.shape[2], img_prev.shape[0], img_prev.shape[1])
-        print(f"img_prev_shape (carlaDataset) :{img_prev.shape}")
-        state_index = self.gt_raw['frames'].index(frame)
-        prev_state = gt_states[state_index]
-        prev_state_vec = torch.as_tensor([prev_state.get_position(),
-                                   prev_state.get_velocity(),
-                                   loc.quat_to_euler(prev_state.rot)]).reshape(9, 1)
+        frame0 = self.camera_raw['frames'][0]
+        gt_index = self.gt_raw['frames'].index(frame0)
+        im0 = cv.imread(self.camera_raw['image_paths'][0], cv.IMREAD_COLOR)
+        NUM_CHANNELS = im0.shape[2]
+        HEIGHT = im0.shape[0]
+        WIDTH = im0.shape[1]
+        self.vo_raw['images']       = torch.zeros(num_frames, 2*NUM_CHANNELS, HEIGHT, WIDTH, dtype=torch.uint8)
+        self.vo_raw['out_state']    = torch.zeros(num_frames, 9)
+        
+        # Load images
+        images = []
+        i = 0
+        print("loading images")
+        for path in self.camera_raw['image_paths']:
+            image = cv.imread(path, cv.IMREAD_COLOR)
+            image = torch.as_tensor(image, dtype=torch.uint8)
+            image = image.reshape(NUM_CHANNELS, HEIGHT, WIDTH)
+            images.append(image)
+            i+=1
+            print("loading image {} of {}".format(i, num_frames))
 
-        self.vo_raw['images']       = torch.zeros(num_frames, 2*img_prev.shape[0], *img_prev.shape[1:], dtype=torch.uint8)
-        self.vo_raw['input_state']  = torch.zeros(num_frames, *prev_state_vec.shape)
-        self.vo_raw['out_state']    = torch.zeros(num_frames, *prev_state_vec.shape)
-
-        # Process all other frames
+        # Process frames
+        prev_state = gt_states[gt_index]
         for i in range(1, len(self.camera_raw['frames']) - 1):
+            # update frame vars
             frame = self.camera_raw['frames'][i]
-            img_path = self.camera_raw['image_paths'][i]
-            img = cv.imread(img_path, cv.IMREAD_COLOR)
-            img = img.reshape(img.shape[2], img.shape[0], img.shape[1])
-            
-            gt_index = self.gt_raw['frames'].index(frame)
+            img_prev = images[i-1]
+            img = images[i]
+            gt_index = self.gt_raw['frames'].index(frame, gt_index)
             state = gt_states[gt_index]
-            state_vec = torch.as_tensor([state.get_position(),
-                                  state.get_velocity(),
-                                  loc.quat_to_euler(state.rot)]).reshape(9, 1)
+            r = torch.as_tensor(loc.quat_to_mat(state.rot)).reshape(3,3)
 
-            # Construct input volume for example
-            input_volume = torch.zeros(2*img.shape[0], img.shape[1], img.shape[2], dtype=torch.uint8)
-            # print(f"input_vol_shape: {input_volume.shape}")
-            input_volume[0:3,:,:] = torch.as_tensor(img, dtype=torch.uint8)
-            input_volume[3: ,:,:] = torch.as_tensor(img_prev, dtype=torch.uint8)
+            # change in orientation
+            q_change = prev_state.rot.get_inverse() * state.rot
+            e_angles = torch.as_tensor(loc.quat_to_euler(q_change)).reshape(3,1)
+
+            # change in position (camera frame)
+            prev_pos = torch.as_tensor(prev_state.get_position()).reshape(3,1)
+            pos = torch.as_tensor(state.get_position()).reshape(3,1)
+            pos_c = r.inverse().matmul(pos)
+            prev_pos_c = r.inverse().matmul(prev_pos)
+            pos_change = pos_c - prev_pos_c
             
-            self.vo_raw['images'     ][i, :, :, :] = input_volume
-            self.vo_raw['input_state'][i, :] = prev_state_vec
-            self.vo_raw['out_state'  ][i, :] = state_vec
+            #change in velocity
+            vel = torch.as_tensor(state.get_velocity()).reshape(3,1)
+            vel_c = r.matmul(vel)
+
+            state_vec = torch.zeros(9,1)
+            state_vec[0:3, :] = pos_change
+            state_vec[3:6, :] = vel_c
+            state_vec[6:, :]  = e_angles
+            input_volume = torch.zeros(2*NUM_CHANNELS, HEIGHT, WIDTH, dtype=torch.uint8)
+            input_volume[0:3] = img
+            input_volume[3: ] = img_prev
+            
+            self.vo_raw['images'   ][i-1] = input_volume
+            self.vo_raw['out_state'][i-1] = state_vec.reshape(9)
 
             # Update loop variables
-            img_prev = img
-            prev_state_vec = state_vec
-        print(f"vo_raw['images'].shape: {self.vo_raw['images'].shape}")
+            prev_state = state
+
         self.num_vo_frames = self.vo_raw['images'].shape[0]
         return 
 
     def __getitem__(self, index):
-        return self.vo_raw['images'][index], \
-               self.vo_raw['input_state'][index], \
-               self.vo_raw['out_state'][index]
+        return self.vo_raw['images'][index], self.vo_raw['out_state'][index]
 
     def __len__(self):
         return self.num_vo_frames
@@ -272,23 +283,31 @@ class CarlaDataset(Dataset):
     def get_gt_states(self):
         states = []
         for (frame, t, x, y, z, vx, vy, vz, roll, pitch, yaw) in zip(
-            self.gt_raw['frames'],
-            self.gt_raw['times'],
-            self.gt_raw['xs'],
-            self.gt_raw['ys'],
-            self.gt_raw['zs'],
-            self.gt_raw['vxs'],
-            self.gt_raw['vys'],
-            self.gt_raw['vzs'],
-            self.gt_raw['rolls'],
-            self.gt_raw['pitches'],
-                self.gt_raw['yaws']):
+                                                self.gt_raw['frames'],
+                                                self.gt_raw['times'],
+                                                self.gt_raw['xs'],
+                                                self.gt_raw['ys'],
+                                                self.gt_raw['zs'],
+                                                self.gt_raw['vxs'],
+                                                self.gt_raw['vys'],
+                                                self.gt_raw['vzs'],
+                                                self.gt_raw['rolls'],
+                                                self.gt_raw['pitches'],
+                                                self.gt_raw['yaws']):
             rot = loc.Quaternion([roll, pitch, yaw], False).as_vector()
             states.append(loc.State([x, y, z], [vx, vy, vz], rot, t, frame))
         return states
 
 def test():
     dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset01")
-    ds_handler = CarlaDataset(dataset_path)
+    dataset = CarlaDataset(dataset_path)
+    dataloader = DataLoader(dataset=dataset, batch_size=4, shuffle=False, num_workers=2)
+    data_iter = iter(dataloader)
+    data = data_iter.next()
 
+    img, out_state = data
+    plt.imshow(img[0, 0:3].reshape(600,800,3))
+    plt.show()
+    print(f"output_state: {out_state[0]}")
+    
 test()
