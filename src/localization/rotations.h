@@ -111,9 +111,10 @@ public:
             }
         }
         else{ // is Euler angles
-            double roll = angles[0];
-            double pitch = angles[1];
-            double yaw = angles[2];
+            auto nAngles = angleNormalise(angles);
+            double roll = nAngles[0];
+            double pitch = nAngles[1];
+            double yaw = nAngles[2];
 
             double cy = cos(yaw / 2);
             double sy = sin(yaw / 2);
@@ -122,12 +123,12 @@ public:
             double cp = cos(pitch / 2);
             double sp = sin(pitch / 2);
 
-            // Fixed frame
+            // // Fixed frame
             // this->w = cr * cp * cy + sr * sp * sy;
-            // this->x = sr * cp * cy - cr * cp * sy;
-            // this->y = cr * sp * cy + sr * cp * sy;
+            // this->x = sr * cp * cy + cr * cp * sy;
+            // this->y = cr * sp * cy - sr * cp * sy;
             // this->z = cr * cp * sy - sr * sp * cy;
-
+            // this->normalize();
             // Rotating frame
             this->w = cr * cp * cy - sr * sp * sy;
             this->x = cr * sp * sy + sr * cp * cy;
@@ -136,7 +137,7 @@ public:
         }
     }
 
-    Quaternion operator*(const Quaternion& q){
+    Quaternion operator*(const Quaternion& q) const {
         // should be quat_mult_left?
         arma::Col<double> v = {x, y, z};
         arma::Mat<double> sumTerm = arma::zeros(4,4);
@@ -208,6 +209,17 @@ inline std::vector<double> quaternionToEuler(Quaternion q){
     arma::Col<double> out = q.toEulerAngles();
     std::vector<double> ret = {out[0], out[1], out[2]};
     return ret;
+}
+
+inline std::vector<double> quaternionToMat(Quaternion q){
+    arma::Mat<double> r = q.toRotMat();
+    std::vector<double> rOut = std::vector<double>(9);
+    for(int i=0; i < 3; i++){
+        for(int j=0; j<3; j++){
+            rOut[j+i*3] = r.at(i, j);
+        }
+    }
+    return rOut;
 }
 
 #endif // ROTATIONS_H

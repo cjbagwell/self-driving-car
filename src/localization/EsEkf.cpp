@@ -17,6 +17,7 @@
 #include<armadillo>
 #include<pybind11/pybind11.h>
 #include<pybind11/stl.h>
+#include<pybind11/operators.h>
 #include "EsEkf.h"
 #include "ImuMeasurement.h"
 #include "rotations.h"
@@ -156,10 +157,14 @@ PYBIND11_MODULE(py_localization, handle){
             ;
         py::class_<Quaternion>(handle, "Quaternion")
             .def(py::init<vector<double>, bool>())
+            .def("__mul__", [] (const Quaternion &a, const Quaternion& b){return a*b;})
+            .def(Quaternion() * py::self)
             .def("as_vector", &Quaternion::asVector)
+            .def("get_inverse", &Quaternion::getInverse)
             ;
         handle.def("euler_to_quat", &eulerToQuaternion);
         handle.def("quat_to_euler", &quaternionToEuler);
+        handle.def("quat_to_mat", &quaternionToMat);
 
         py::class_<GnssMeasurement>(handle, "GnssMeasurement")
             .def(py::init<int, double, double, double, double>())
