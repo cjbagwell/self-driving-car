@@ -121,9 +121,10 @@ model = VoNet(3, 2).to(device=device)
 
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-num_epochs = 10
+num_epochs = 100
 n_total_steps = len(dataloader)
 
+losses = []
 print("starting training")
 for epoch in range(num_epochs):
     for i, (images, labels) in enumerate(dataloader):
@@ -133,6 +134,7 @@ for epoch in range(num_epochs):
         # Forward pass
         outputs = model(images)
         loss = criterion(outputs, labels)
+        losses.append(loss.item())
 
         # Backward and optimize
         optimizer.zero_grad()
@@ -140,9 +142,16 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         if (i+1) % 100 == 0:
-            print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}, dx pred: {outputs[0,0].item():.4f}')
-
+            print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}, dx pred: {outputs[0,0].item():.4f} actual: {labels[0,0].item():.4f}')
+            plt.plot(range(len(losses)), losses, 'blue')
+            plt.ylim((0, 3.0))
+            plt.pause(0.05)
+            
 print('Finished Training')
+FILE = "voModel.pth"
+torch.save(model.state_dict(),  FILE)
+
+plt.show()
 
 
 
