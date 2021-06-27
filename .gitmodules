@@ -2,3 +2,9 @@
 	path = libs/pybind11
 	url = ../../pybind/pybind11
 	branch = stable
+[submodule "libs/googletest"]
+	path = libs/googletest
+	url = https://github.com/google/googletest.git
+[submodule "libs/matplotlib-cpp"]
+	path = libs/matplotlib-cpp
+	url = https://github.com/Cryoris/matplotlib-cpp.git
