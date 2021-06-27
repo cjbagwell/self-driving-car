@@ -1,7 +1,6 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-include_directories(/usr/include/python3.8)
 include_directories(${LIBS}/**)
 add_subdirectory(test)
 enable_testing()

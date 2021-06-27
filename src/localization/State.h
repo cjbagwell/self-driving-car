@@ -77,6 +77,7 @@ public:
 
     std::vector<double> getPosition(){return {pos[0], pos[1], pos[2]};}
     std::vector<double> getVelocity(){return {vel[0], vel[1], vel[2]};}
+    double getYaw(){return this->rot.toEulerAngles()[2];}
 };
 
 inline std::ostream& operator<<(std::ostream& out, const State& s){

@@ -38,7 +38,6 @@ const double GAIN_D = 0.0;  //Derivative error gain
 const double GAIN_I = 0.25; //Integral error gain
 const double GAIN_CTE = 1; // crossTrack error gain
 const double VELOCITY_SOFTENING = 0.2;
-const double PI = 3.14159;
 
 /**Returns the Euclidean norm distance of the two args*/
 inline double normDistance(pair<double, double> first, pair<double,double> second){
@@ -63,19 +62,16 @@ Controller2D::~Controller2D(){
 
 Commands Controller2D::runStep(State currState, Waypoint currWaypoint, double dt){
     Commands newCommands;
-    double requestedAcceleration = this->lonController.runStep(currState.speed, currWaypoint.getV(), dt);
+    double requestedAcceleration = this->lonController.runStep(currState.getSpeed(), currWaypoint.getV(), dt);
     double requestedSteering = this->latController.runStep(currState, currWaypoint);
-    // cout<< "current speed " << currState.speed << "\tcurrent targetSpeed " << currWaypoint.getV() << 
-    //     "\trequested Acceleration " << requestedAcceleration << endl;
-
 
     newCommands.setSteeringAngleRate(requestedSteering);
     if(requestedAcceleration > 0.0){
-        newCommands.setApp(max(requestedAcceleration, 1.0));
+        newCommands.setApp(requestedAcceleration);
         newCommands.setBpp(0);
     }
     else{
-        newCommands.setBpp(max(requestedAcceleration, -1.0));
+        newCommands.setBpp(requestedAcceleration);
         newCommands.setApp(0);
     }
     return newCommands;
@@ -91,34 +87,23 @@ double LongitudinalPIDController::runStep(double currentSpeed, double targetSpee
         
     }
     this->errorBuffer.push_front(e);
+    if(this->errorBuffer.size() > 10) this->errorBuffer.pop_back();
 
     double returnVal = kp*e + kd*de + ki*ie;
-    // cout << "Lon Controller return Val (before max) " << returnVal << endl;
     return max(-1.0, min(returnVal, 1.0));
 }
 
 double LateralStanleyController::runStep(State currState,Waypoint currWaypoint){
-    double dx = currState.x - currWaypoint.getX();
-    double dy = currState.y - currWaypoint.getY();
+    double dx = currState.pos[0] - currWaypoint.getX();
+    double dy = currState.pos[1] - currWaypoint.getY();
     arma::rowvec distVec = {dx, dy};
-    arma::rowvec frontAxleVec = {-cos(currState.yaw + PI/2), -sin(currState.yaw + PI/2)};
-    double yawDesired = wrap2pi(currWaypoint.getYaw());   // desired heading (yaw)
-    double yawError = wrap2pi(yawDesired - currState.yaw); // heading error
-    double cte = arma::dot(distVec, frontAxleVec); // cross track error
-    double ctCorrection = atan2(kcte*cte, ks + currState.speed); //TODO: not sure about the minus velocity softening
+    double yaw = currState.getYaw();
+    arma::rowvec frontAxleVec = {-cos(yaw + PI/2), -sin(yaw + PI/2)};
     
-
-    cout << fixed;
-    cout << setprecision(4);
-    cout << "lateralController \n" <<
-            "yawDesired " << yawDesired << 
-            "\tcurrYaw " << currState.yaw << 
-            "\tyaw_error " << yawError << 
-            "\ncte " << cte << 
-            "\tctCor " << ctCorrection << 
-            "\ncommand " << yawError + ctCorrection << 
-            "\twrapped command " << wrap2pi(yawError + ctCorrection) <<
-            "\n" << endl;
+    double yawDesired = wrap2pi(currWaypoint.getYaw()); // desired heading (yaw)
+    double yawError   = wrap2pi(yawDesired - yaw);      // heading error
+    double cte = arma::dot(distVec, frontAxleVec);      // cross track error
+    double ctCorrection = atan2(kcte*cte, ks + currState.getSpeed());
     return (yawError + ctCorrection)/PI;
 }
 
@@ -143,47 +128,4 @@ PYBIND11_MODULE(py_controller, handle){
             .def("update_waypoints", &Controller2D::updateWaypoints)
             .def("run_step", &Controller2D::runStep)
             ;
-        py::class_<State>(handle, "State")
-            .def(py::init<>())
-            .def(py::init<double,double,double,double,double,int>())
-            ;
 }
-
-// int main(){
-//     vector<Waypoint> testWaypoints;
-//     Waypoint w1, w2, w3, w4, w5;
-//     w1.v = 1;
-//     w2.x = 1;
-//     w2.v = 2;
-//     w3.x = 2;
-//     w3.v = 3;
-//     w4.x = 3;
-//     w4.v = 4;
-//     w5.x = 4;
-//     w5.v = 5;
-//     testWaypoints.push_back(w1);
-//     testWaypoints.push_back(w2);
-//     testWaypoints.push_back(w3);
-//     testWaypoints.push_back(w4);
-//     testWaypoints.push_back(w5);
-
-//     vector<State> testStates;
-//     for(int i = 0; i < 5; i++){
-//         State testState;
-//         testState.time = i;
-//         testState.x = i;
-//         testState.yaw = 0;
-//         testState.speed = i;
-//         testState.frame = i;
-//         testStates.push_back(testState);
-//     }
-
-//     Controller2D testController(testWaypoints);
-//     for(int i = 0; i < 5; i++){
-//         cout << "iteration :  " << i << endl;;
-//         cout << "currState: x=" << testStates[i].x << "\ty=" << testStates[i].y << "\tyaw=" << testStates[i].yaw << endl;
-//         testController.updateState(testStates[i]);
-//         testController.updateCommands();
-//         testController.getCommands();
-//     }
-// }

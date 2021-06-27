@@ -14,7 +14,11 @@ import sys
 import carla #type:ignore
 
 # my modules
-from controller2D_interface import Controller2DInterface #type:ignore
+try:
+    sys.path.append(os.path.abspath("/home/jordan/Projects/self-driving-car"))
+except:
+    print("Error while locating the Project")
+from src.controller.test.controller2D_interface import Controller2DInterface
 
 # ==============================================================================
 # -- Find CARLA module ---------------------------------------------------------
@@ -116,18 +120,22 @@ class TestLocalPlanner(LocalPlanner):
                 self._max_brake = opt_dict['max_brake']
             if 'max_steering' in opt_dict:
                 self._max_steer = opt_dict['max_steering']
-            if 'offset' in opt_dict:
-                self._offset = opt_dict['offset']
+        
+        self._sampling_radius = self._target_speed * 1 / 7.2  # 1 seconds horizon
+        self._min_distance = self._sampling_radius * self.MIN_DISTANCE_PERCENTAGE
+        self._offset = 0
+
+        # parameters overload
+        if opt_dict:
+            if 'dt' in opt_dict:
+                self._dt = opt_dict['dt']
+            if 'target_speed' in opt_dict:
+                self._target_speed = opt_dict['target_speed']
 
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         
         self._vehicle_controller = Controller2DInterface(self._vehicle,
-                                                        args_lateral=args_lateral_dict,
-                                                        args_longitudinal=args_longitudinal_dict,
-                                                        offset=self._offset,
-                                                        max_throttle=self._max_throt,
-                                                        max_brake=self._max_brake,
-                                                        max_steering=self._max_steer)
+                                                        opt_dict=opt_dict)
 
         self._global_plan = False
 

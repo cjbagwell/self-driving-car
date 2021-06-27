@@ -37,9 +37,11 @@ from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 
 # my class imports
-from test_local_planner import TestLocalPlanner #type:ignore
-
-
+try:
+    sys.path.append(os.path.abspath("/home/jordan/Projects/self-driving-car"))
+except:
+    print("Error locating the Project")
+from src.controller.test.test_local_planner import TestLocalPlanner
 
 class TestAgent(Agent):
     """
@@ -49,7 +51,7 @@ class TestAgent(Agent):
     This agent respects traffic lights and other vehicles.
     """
 
-    def __init__(self, vehicle, target_speed=20):
+    def __init__(self, vehicle, args):
         """
 
         :param vehicle: actor to apply to local planner logic onto
@@ -58,11 +60,16 @@ class TestAgent(Agent):
         self._proximity_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
         self._local_planner = TestLocalPlanner(
-            self._vehicle, opt_dict={'target_speed' : target_speed})        
+            self._vehicle, opt_dict={
+                                    'K_P' : args.K_P,
+                                    'K_I' : args.K_I,
+                                    'K_D' : args.K_D,
+                                    'K_S' : args.K_S,
+                                    'K_CTE' : args.K_CTE})        
         self._hop_resolution = 2.0
         self._path_seperation_hop = 2
         self._path_seperation_threshold = 0.5
-        self._target_speed = target_speed
+        self._target_speed = args.target_speed
         self._grp = None
 
     def set_destination(self, location):

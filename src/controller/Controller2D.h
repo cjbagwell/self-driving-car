@@ -9,6 +9,10 @@
  * 
  */
 
+
+#ifndef CONTROLLER_2D_H
+#define CONTROLLER_2D_H
+
 // std lib includes
 #include<iostream>
 #include<ostream>
@@ -21,17 +25,13 @@
 #include "../planner/Waypoint.h"
 #include "../planner/Commands.h"
 
-#ifndef CONTROLLER_2D_H
-#define CONTROLLER_2D_H
 
 namespace controller{
-
-    using namespace std;
 
     class LongitudinalPIDController{
     private:
         const double kp, ki, kd;
-        list<double> errorBuffer; /** TODO: probably change the type of erBuf */
+        std::list<double> errorBuffer; /** TODO: probably change the type of erBuf */
     public:
         /**
          * @brief Construct a new Longitudinal P I D Controller object
@@ -108,8 +108,8 @@ namespace controller{
     
     class Controller2D{
     private:
-        vector<Waypoint> waypoints;
-        vector<double> velocityErrorBuffer; 
+        std::vector<Waypoint> waypoints;
+        std::vector<double> velocityErrorBuffer; 
         Commands prevCommands;
         LateralStanleyController latController;
         LongitudinalPIDController lonController;
@@ -122,7 +122,7 @@ namespace controller{
          * @param ws the initial waypoints for the controller to track to.  See
          * ctr::Waypoint for more information.
          */
-        Controller2D(vector<Waypoint> ws, Commands iniCommands):waypoints(ws), prevCommands(iniCommands){};
+        Controller2D(std::vector<Waypoint> ws, Commands iniCommands):waypoints(ws), prevCommands(iniCommands){};
         
         /**
          * @brief Construct a new Controller 2 D object
@@ -149,7 +149,7 @@ namespace controller{
          * @param newWaypoints The new waypoints that the controller will track to.  See ctr::Waypoint
          * for more information.
          */
-        void updateWaypoints(const vector<Waypoint> &newWaypoints){this->waypoints = newWaypoints;}
+        void updateWaypoints(const std::vector<Waypoint> &newWaypoints){this->waypoints = newWaypoints;}
         
         /**
          * @brief 

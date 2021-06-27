@@ -683,7 +683,7 @@ def game_loop(args):
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-        client.load_world('Town02')
+        client.load_world(args.town)
         world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world)
 
@@ -699,8 +699,8 @@ def game_loop(args):
                                    spawn_point.location.z))
         elif args.agent == "Test":
             print("Selecting Test Agent")
-            agent = TestAgent(world.player)
-            spawn_point = world.map.get_spawn_points()[0]
+            agent = TestAgent(world.player, args)
+            spawn_point = np.random.choice(world.map.get_spawn_points())
             agent.set_destination((spawn_point.location.x,
                                    spawn_point.location.y,
                                    spawn_point.location.z))

@@ -8,7 +8,6 @@
  
 """Example of automatic vehicle control from client side."""
 from __future__ import print_function
-from carla_util import game_loop #type:ignore
 import argparse
 import glob
 import logging
@@ -34,9 +33,16 @@ except IndexError:
     print("error while adding PythonAPI for release mode")
     pass
 
-# my classes
-from test_agent import TestAgent #type:ignore
-from carla_util import * #type:ignore
+# ==============================================================================
+# -- My Code -------------------------------------------------------------------
+# ==============================================================================
+try:
+    sys.path.append(os.path.abspath("/home/jordan/Projects/self-driving-car"))
+except:
+    print("error while locating the project")
+
+from src.controller.test.test_agent import TestAgent
+from src.controller.test.carla_util import game_loop
 
 def main():
     """Main method"""
@@ -92,6 +98,41 @@ def main():
         '-s', '--seed',
         help='Set seed for repeating executions (default: None)',
         default=None,
+        type=int)
+    argparser.add_argument(
+        '--K_P',
+        help='Set the Proportional Gain for the Longitudinal Controller',
+        default=0.8,
+        type=float)
+    argparser.add_argument(
+        '--K_I',
+        help='Set the Integral Gain for the Longitudinal Controller',
+        type=float,
+        default=0.15)
+    argparser.add_argument(
+        '--K_D',
+        help='Set the Derivative Gain for the Longitudinal Controller', 
+        type=float,
+        default=0.2)
+    argparser.add_argument(
+        '--K_S', 
+        help="Set the Velocity Softening Term for the Lateral Stanley Controller.",
+        type=float,
+        default=0.1)
+    argparser.add_argument(
+        '--K_CTE',
+        help="Set the Crosstrack-Error gain for the Lateral Stanley Controller.",
+        type=float,
+        default=3.0)
+    argparser.add_argument(
+        '-t', '--town',
+        help="Select the town to load into",
+        type=str,
+        default='Town02')
+    argparser.add_argument(
+        '--target_speed',
+        help="Set the target speed for the vehicle [km/hr]",
+        default=20,
         type=int)
 
     args = argparser.parse_args()
