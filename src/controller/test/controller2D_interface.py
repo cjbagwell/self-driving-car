@@ -26,11 +26,10 @@ class Controller2DInterface():
         Constructor method.
 
         :param vehicle: actor to apply to local planner logic onto
-        :param args_lateral: dictionary of arguments to set the lateral Stanley controller
-        using the following semantics:
+        :param opt_dict: dictionary of arguments to set the vehicle controller.
+        Stanley Controller using the following semantics:
             K_S -- Velocity-Softening term
             K_CTE -- Crosstrack-Error term
-        :param args_longitudinal: dictionary of arguments to set the longitudinal
         PID controller using the following semantics:
             K_P -- Proportional term
             K_D -- Differential term
@@ -39,19 +38,15 @@ class Controller2DInterface():
 
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
-        self.past_steering = self._vehicle.get_control().steer
-        past_app = self._vehicle.get_control().throttle
-        past_bpp = self._vehicle.get_control().brake
 
         # generate starting commands and controller parameters
-        ini_commands = Commands(past_app, past_bpp, self.past_steering)
         kp = opt_dict['K_P']
         ki = opt_dict['K_I']
         kd = opt_dict['K_D']
         ks = opt_dict['K_S']
         kcte = opt_dict['K_CTE']
 
-        self.vehicle_controller = Controller2D(ini_commands, kp, ki, kd, ks, kcte)
+        self.vehicle_controller = Controller2D(kp, ki, kd, ks, kcte)
     
     def run_step(self, target_speed, waypoint):
         """
@@ -61,7 +56,7 @@ class Controller2DInterface():
 
             :param target_speed: desired vehicle speed
             :param waypoint: target location encoded as a waypoint
-            :return: distance (in meters) to the waypoint
+            :return: required controls for the ego vehicle
         """
         # carla variables
         physics_control = self._vehicle.get_physics_control()

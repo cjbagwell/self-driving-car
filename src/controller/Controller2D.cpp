@@ -123,9 +123,7 @@ PYBIND11_MODULE(py_controller, handle){
             .def("get_steering_angle_rate", &Commands::getSteeringAngleRate)
             ;
         py::class_<Controller2D>(handle, "Controller2D")
-            .def(py::init<vector<Waypoint>, Commands>())
-            .def(py::init<Commands, double, double, double, double, double>())
-            .def("update_waypoints", &Controller2D::updateWaypoints)
+            .def(py::init<double, double, double, double, double>())
             .def("run_step", &Controller2D::runStep)
             ;
 }
