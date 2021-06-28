@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join("/home/jordan/Projects/self-driving-car/"))
-from src.localization.test.CarlaDataset import CarlaDataset #type:ignore
+from src.localization.test.CarlaDataset import CarlaDataset 
 from build.src.localization.py_localization import EsEkf, gnss_2_position, ImuMeasurement, State, quat_to_euler #type:ignore
 
 dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset01")
