@@ -119,14 +119,14 @@ State VisualOdometer::runStep(const cv::Mat &currImg)
 
 int main()
 {
-    std::string imageDirPath = "/home/jordan/Projects/self-driving-car/src/localization/test/images/";
+    std::string datasetPath = "/home/jordan/Datasets/CarlaDatasets/TestDataset01/";
 
     // Arguments
-    bool showVideo = false;       // Before Running the simulation, display the input video
+    bool showVideo = true;       // Before Running the simulation, display the input video
     bool runSim = true;           // Run the simulation
     auto IM_STYLE = IMREAD_COLOR; // The color style of images to run on simulation (IMREAD_GRAYSCALE or IMREAD_COLOR)
-    int startNum = 75;            // First Image Number to run
-    int endNum = 125;             // Last Image Number to run
+    int startNum = 0;            // First Image Number to run
+    int endNum = 75;             // Last Image Number to run
 
     // showVideo
     int imNum;
@@ -136,7 +136,7 @@ int main()
         cv::namedWindow("Input Images", cv::WINDOW_FULLSCREEN);
         while (++imNum < endNum)
         {
-            std::string imName = imageDirPath + "test_image_" + to_string(imNum) + ".png";
+            std::string imName = datasetPath + "images/TestDataset01_output_image_" + to_string(imNum) + ".png";
             cout << "Image Name: " << imName << endl;
             try
             {
@@ -159,7 +159,7 @@ int main()
         vector<State> outputState;
         vector<double> xOut, yOut, zOut, xGt, yGt, zGt, rollGt, pitchGt, yawGt;
 
-        String gtFilePath = imageDirPath + "GT_Data.txt";
+        String gtFilePath = datasetPath + "GT_data.txt";
         std::ifstream infile(gtFilePath);
         if (infile.is_open())
         {
@@ -168,6 +168,7 @@ int main()
                 string s;
                 if (!getline(infile, s))
                     break;
+                cout << s << endl;
                 istringstream ss(s);
                 vector<string> record;
 
@@ -178,22 +179,23 @@ int main()
                         break;
                     record.push_back(s);
                 }
-                xGt.push_back(stod(record[1]));
-                yGt.push_back(stod(record[2]));
-                zGt.push_back(stod(record[3]));
-                rollGt.push_back(stod(record[7]));
-                pitchGt.push_back(stod(record[8]));
-                yawGt.push_back(stod(record[9]));
+                if(record[0] == "frame") continue;
+                xGt.push_back(stod(record[2]));
+                yGt.push_back(stod(record[3]));
+                zGt.push_back(stod(record[4]));
+                rollGt.push_back(stod(record[8]));
+                pitchGt.push_back(stod(record[9]));
+                yawGt.push_back(stod(record[10]));
                 // cout << "x: " << stod(record[1]) << "\ty: " << stod(record[2]) << endl;
             }
             infile.close();
         }
         else
         {
-            cout << "Error opening file";
+            cout << "Error opening file" << endl;
         }
 
-        cv::Mat img = imread(imageDirPath + "test_image_" + to_string(startNum) + ".png", IM_STYLE);
+        cv::Mat img = imread(datasetPath + "images/test_image_" + to_string(startNum) + ".png", IM_STYLE);
         cv::Mat k({400, 0, 400, 0, 400, 300, 0, 0, 1});
         k = k.reshape(1, {3, 3});
         State s1 = State();
@@ -213,7 +215,7 @@ int main()
         imNum = startNum;
         while (++imNum < endNum)
         {
-            std::string imName = imageDirPath + "test_image_" + to_string(imNum) + ".png";
+            std::string imName = datasetPath + "images/test_image_" + to_string(imNum) + ".png";
             cout << "Image Name: " << imName << endl;
             try
             {
