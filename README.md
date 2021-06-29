@@ -3,7 +3,9 @@
 This project aims to control a vehicle in the Carla Simulator from raw sensor inputs.  This is meant to be a learning opportunity for developing a large scale project using git.  Currently, the project only has the vehicle controller and localization code implemented.
 
 ## Controller
-The controller of a self driving car is responsible for computing the Accelerator Pedal Position (APP), Brake Pedal Position (BPP), and Steering Angle for the vehicle to reach a desired state.  The control problem can be simplified by separating it into two separate components; longitudinal control and lateral control.
+The controller of a self driving car is responsible for computing the Accelerator Pedal Position (APP), Brake Pedal Position (BPP), and Steering Angle for the vehicle to reach a desired state.  The control problem can be simplified by separating it into two separate components; longitudinal control and lateral control.  
+Running src/controller/test/test_controller2d.py uses the local planner built into carla to test the controller's performance.  The red X's show the desired location of the vehicle.
+![Alt Text](https://github.com/cjbagwell/self-driving-car/blob/main/Controller2D-Example%20(1).gif?raw=true)
 
 ### Longitudinal Control
 The longitudinal vehicle controller is responsible for computing the required APP and BPP for the ego vehicle to reach a desired speed.  The longitudinal controller implemented in this project uses a simple PID controller to calculate if the vehicle must accelerate or decelerate in order to reach the target speed.  This done by taking the difference between the desired speed and the current speed of the ego vehicle.  The high level error signal produced is then translated into APP and BPP setpoints using a low level controller which translates positive errors into positive APP values and negative errors into positive BPP values.
