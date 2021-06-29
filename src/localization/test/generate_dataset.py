@@ -21,6 +21,7 @@ import argparse
 import logging
 import shutil
 from matplotlib import pyplot as plt
+from scipy.spatial.transform import Rotation as R
 
 try:
     import pygame
@@ -676,6 +677,7 @@ def gnss_callback(data, agent):
         transform = agent.vehicle.get_transform()
         loc = transform.location
         rot = transform.rotation
+        rot = R.from_euler('yzx', [rot.pitch, rot.yaw, rot.roll], degrees=True)
         vel = agent.vehicle.get_velocity()
         gt_events[data.frame] = (t, loc, vel, rot)
     
@@ -684,12 +686,14 @@ def imu_callback(data, agent):
     t = data.timestamp
     if t < 5:
         return
+    
+    imu_events.append(data)
     if data.frame not in gt_events:
         transform = agent.vehicle.get_transform()
         loc = transform.location
         rot = transform.rotation
+        rot = R.from_euler('yzx', [rot.pitch, rot.yaw, rot.roll], degrees=True)
         vel = agent.vehicle.get_velocity()
-        imu_events.append(data)
         gt_events[data.frame] = (t, loc, vel, rot)
 
 def camera_callback(data, agent):
@@ -701,6 +705,7 @@ def camera_callback(data, agent):
         transform = agent.vehicle.get_transform()
         loc = transform.location
         rot = transform.rotation
+        rot = R.from_euler('yzx', [rot.pitch, rot.yaw, rot.roll], degrees=True)
         vel = agent.vehicle.get_velocity()
         gt_events[data.frame] = (t, loc, vel, rot)
 
@@ -823,6 +828,8 @@ def create_data_files(carla_datasets_dir, dataset_name, gnss_es, imu_es, cam_es,
 
     for frame in gt_frames:
         time, pos, vel, rot = gt_es[frame]
+        e_angles = rot.as_euler('xyz', degrees=True)
+        print(e_angles)
         gt_times.append(time)
         xs.append(pos.x)
         ys.append(pos.y)
@@ -830,9 +837,9 @@ def create_data_files(carla_datasets_dir, dataset_name, gnss_es, imu_es, cam_es,
         vxs.append(vel.x)
         vys.append(vel.y)
         vzs.append(vel.z)
-        pitches.append(rot.pitch)
-        yaws.append(rot.yaw)
-        rolls.append(rot.roll)
+        pitches.append(e_angles[1])
+        yaws.append(e_angles[2])
+        rolls.append(e_angles[0])
     location_data = zip(gt_frames, gt_times, xs, ys, zs, vxs, vys, vzs, rolls, pitches, yaws)
     labels = ['frame', 'time', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'roll', 'pitch', 'yaw']
     write_data_file(dataset_dir, "GT_data.txt", location_data, labels)  
@@ -1053,7 +1060,7 @@ def main():
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
         
-    create_data_files("/home/jordan/Datasets/CarlaDatasets/", "TestDataset01", gnss_events, imu_events, cam_events, gt_events)
+    create_data_files("/home/jordan/Datasets/CarlaDatasets/", "TestDataset03", gnss_events, imu_events, cam_events, gt_events)
 
 if __name__ == '__main__':
     main()

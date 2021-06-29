@@ -7,10 +7,11 @@ sys.path.append(os.path.join("/home/jordan/Projects/self-driving-car/"))
 from src.localization.test.CarlaDataset import CarlaDataset #type:ignore
 from build.src.localization.py_localization import EsEkf, gnss_2_position, ImuMeasurement, State, quat_to_euler #type:ignore
 
-dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset01")
+dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset03")
 dh = CarlaDataset(dataset_path, load_vo_dataset=False)
 imu_measurements = dh.get_imu_measurements()
 gnss_measurements  = dh.get_gnss_measurements()
+print(f"len_imu{len(imu_measurements)}")
 print(f"len gnss {len(gnss_measurements)}")
 gt_states  = dh.get_gt_states()
 gt_times = [state.time for state in gt_states]
@@ -20,28 +21,29 @@ imu_time = [m.get_time() for m in imu_measurements]
 
 gt_index = gt_times.index(imu_measurements[0].get_time())
 init_state = gt_states[gt_index]
-imu_var = np.asarray([1, 1, 1, 1, 1, 1]) * 3.0
-gnss_var = np.asarray([1, 1, 1]) * 0.001
-init_var = [*imu_var, *imu_var[3:]]
+imu_var = np.asarray([1, 1, 1, 1, 1, 1]) * 2.5
+gnss_var = np.asarray([1, 1, 1]) * 0.01
+init_var = np.asarray([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) * 1.0
 
 filter = EsEkf(init_state, init_var)
-print(len(gnss_measurements))
 outputs = []
 outs_gnss = []
 gnss_index = 0
 for i in range(len(imu_measurements)):
     out = filter.run_step(imu_measurements[i], imu_var)
     imu_t = imu_measurements[i].get_time() 
+    imu_frame = imu_measurements[i].frame
 
-    # for j in range(gnss_index, len(gnss_measurements)):
-    #     gns_t = gnss_measurements[j].t
-    #     # print(f"i {i}\tj{j}")
-    #     if imu_measurements[i].frame == gnss_measurements[j].frame:
-    #         out = filter.run_step(gnss_measurements[j], gnss_var)
-    #         outs_gnss.append(out)
-    #         gnss_index = j + 1
-    #         print("gnss_measurement index: {}\t\tdt: {}".format(gnss_index, gns_t - imu_t))
-    #         break
+    for j in range(gnss_index, len(gnss_measurements)):
+        gns_t = gnss_measurements[j].t
+        gns_frame = gnss_measurements[j].frame
+        # print(f"i {i}\tj{j}")
+        if imu_frame <= gns_frame:
+            out = filter.run_step(gnss_measurements[j], gnss_var)
+            outs_gnss.append(out)
+            gnss_index = j
+            # print("gnss_measurement index: {}\t\tdt: {}".format(gnss_index, gns_t - imu_t))
+            break
 
     outputs.append(out)
 
@@ -122,6 +124,7 @@ lon_gnss = dh.gnss_raw['lons']
 ax = plt.axes(projection='3d')
 ax.plot3D(x_gt, y_gt, z_gt, '--b')
 ax.plot3D(x_out, y_out, z_out, 'r')
+ax.plot3D(x_gt[0], y_gt[0], z_gt[0], '*g')
 # ax.plot3D(x_meas, y_meas, z_meas, '*')
 ax.set_xlabel('Easting [m]')
 ax.set_ylabel('Northing [m]')

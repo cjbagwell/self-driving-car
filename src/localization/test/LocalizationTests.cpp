@@ -69,36 +69,36 @@ TEST(RotationsTests, Quaternions_Euler_Angles_Conversions){
     // Test Euler Angles Quaternions
     Col<double> eAngles({0, 0, 0}); // Euler Angles
     Quaternion eQuat(eAngles, false);
-    ASSERT_TRUE(testQuat == eQuat) << eQuat;
+    ASSERT_TRUE(testQuat == eQuat || -testQuat == eQuat) << eQuat;
 
     eAngles = Col<double> ({PI/2, 0, 0});
     eQuat = Quaternion(eAngles, false);
     testQuat = Quaternion(sqrt(2)/2, sqrt(2)/2, 0, 0);
-    EXPECT_TRUE(testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
+    EXPECT_TRUE(testQuat == eQuat || -testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
     EXPECT_TRUE(isEqual(eAngles, eQuat.toEulerAngles())) << "expected:\n" << eAngles << "\nwas:\n" << eQuat.toEulerAngles();
 
     eAngles = Col<double> ({0, PI/2, 0});
     eQuat = Quaternion(eAngles, false);
     testQuat = Quaternion(sqrt(2)/2, 0, sqrt(2)/2, 0);
-    EXPECT_TRUE(testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
+    EXPECT_TRUE(testQuat == eQuat || -testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
     EXPECT_TRUE(isEqual(eAngles, eQuat.toEulerAngles())) << "expected:\n" << eAngles << "\nwas:\n" << eQuat.toEulerAngles();
 
     eAngles = Col<double>({0, 0, PI/2});
     eQuat = Quaternion(eAngles, false);
     testQuat = Quaternion(sqrt(2)/2, 0, 0, sqrt(2)/2);
-    EXPECT_TRUE(testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
+    EXPECT_TRUE(testQuat == eQuat || -testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
     EXPECT_TRUE(isEqual(eAngles, eQuat.toEulerAngles())) << "expected:\n" << eAngles << "\nwas:\n" << eQuat.toEulerAngles();
 
     eAngles = Col<double>({PI/4, PI/2, -PI/4});
     eQuat = Quaternion(eAngles, false);
     testQuat = Quaternion(sqrt(2)/2, 0, sqrt(2)/2, 0);
-    EXPECT_TRUE(testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
+    EXPECT_TRUE(testQuat == eQuat || -testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
     EXPECT_TRUE(isEqual(eAngles, eQuat.toEulerAngles())) << "expected:\n" << eAngles << "\nwas:\n" << eQuat.toEulerAngles();
 
     eAngles = Col<double>({PI/6, PI/4, PI/3});
     eQuat = Quaternion(eAngles, false);
     testQuat = Quaternion(0.7233174, 0.3919038, 0.2005621, 0.5319757);
-    EXPECT_TRUE(testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
+    EXPECT_TRUE(testQuat == eQuat || -testQuat == eQuat) << "expected:\n" << testQuat << "\nwas:\n" << eQuat;
     EXPECT_TRUE(isEqual(eAngles, eQuat.toEulerAngles())) << "expected:\n" << eAngles << "\nwas:\n" << eQuat.toEulerAngles();
 }
 

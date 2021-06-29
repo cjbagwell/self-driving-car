@@ -122,7 +122,7 @@ State EsEKF::runStep(GnssMeasurement &m, Row<double> &sensorVar){
     // Correct Predicted State
     currState.pos = currState.pos + xErr.subvec(0,2);
     currState.vel = currState.vel + xErr.subvec(3, 5);
-    currState.rot = currState.rot * Quaternion(xErr.subvec(6, 8), false);
+    currState.rot = currState.rot * Quaternion(xErr.subvec(6, 8), true);
 
     // Update Covariance
     pCov = (eye(9,9) - k * hJac) * pCov;

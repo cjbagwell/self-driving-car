@@ -78,6 +78,9 @@ private:
     double w, x, y, z;
 public:
     friend std::ostream& operator<<(std::ostream& out, const Quaternion& q);
+    Quaternion operator-() const{
+        return Quaternion(-w, -x, -y, -z);
+    }
     bool operator==(const Quaternion& q2){
         if((w - q2.w) < QUAT_EQUALS_TOLERANCE && 
            (x - q2.x) < QUAT_EQUALS_TOLERANCE && 
@@ -116,6 +119,12 @@ public:
             double pitch = nAngles[1];
             double yaw = nAngles[2];
 
+            // Quaternion pQuat = Quaternion(cos(pitch/2), 0, -sin(pitch/2), 0);
+            // Quaternion rQuat = Quaternion(cos(roll/2), -sin(roll/2), 0, 0);
+            // Quaternion yQuat = Quaternion(cos(yaw/2), 0, 0, -sin(yaw/2));
+
+            // *this = pQuat*rQuat*yQuat;
+
             double cy = cos(yaw / 2);
             double sy = sin(yaw / 2);
             double cr = cos(roll / 2);
@@ -123,12 +132,13 @@ public:
             double cp = cos(pitch / 2);
             double sp = sin(pitch / 2);
 
-            // // Fixed frame
+            // Fixed frame
             // this->w = cr * cp * cy + sr * sp * sy;
             // this->x = sr * cp * cy + cr * cp * sy;
             // this->y = cr * sp * cy - sr * cp * sy;
             // this->z = cr * cp * sy - sr * sp * cy;
             // this->normalize();
+
             // Rotating frame
             this->w = cr * cp * cy - sr * sp * sy;
             this->x = cr * sp * sy + sr * cp * cy;
@@ -148,6 +158,7 @@ public:
         arma::Col<double> quatArr = sigma * arma::Col<double>({q.w, q.x, q.y, q.z}); 
         Quaternion retQuat(quatArr.as_row());
         // retQuat.normalize();
+        // std::cout << *this << " * " << q << " = " << retQuat << std::endl;
         return retQuat;
     }
 
@@ -159,8 +170,8 @@ public:
     
     arma::Col<double> toEulerAngles(){
         double roll  = std::atan2(2 * (w*x + y*z), 1 - 2*(x*x + y*y));
-        double pitch = std::asin(2 * (w*y - z*x));
-        double yaw   = std::atan2(2 * (w*z + x*y), 1 - 2 * (y*y + z*z));
+        double pitch = std::asin( 2 * (w*y - z*x));
+        double yaw   = std::atan2(2 * (w*z + x*y), 1 - 2*(y*y + z*z));
         arma::Col<double> eAngles({roll, pitch, yaw});
         return angleNormalise(eAngles);
     }
