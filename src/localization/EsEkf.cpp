@@ -89,8 +89,8 @@ State EsEKF::runStep(ImuMeasurement &m, Row<double> &sensorVar){
     // cout << "fJac:\n"   << fJac     << "\n";
     // cout << "lJac:\n"   << lJac     << "\n";
     // cout << "qCov:\n"   << qCov     << "\n";
-    cout << "pCov:\n"   << pCov     << "\n";
-    cout << endl;
+    // cout << "pCov:\n"   << pCov     << "\n";
+    // cout << endl;
     
     // 4. Update Filter State
     currState.pos = pCheck;
@@ -152,8 +152,9 @@ PYBIND11_MODULE(py_localization, handle){
 
         py::class_<ImuMeasurement>(handle, "ImuMeasurement")
             .def(py::init<>())
-            .def(py::init<vector<double>, double, vector<double>, double>())
+            .def(py::init<vector<double>, double, vector<double>, double, int>())
             .def("get_time", &ImuMeasurement::getTime)
+            .def_readwrite("frame", &ImuMeasurement::frame)
             ;
         py::class_<Quaternion>(handle, "Quaternion")
             .def(py::init<vector<double>, bool>())

@@ -11,6 +11,7 @@ dataset_path = os.path.join("/home/jordan/Datasets/CarlaDatasets", "TestDataset0
 dh = CarlaDataset(dataset_path, load_vo_dataset=False)
 imu_measurements = dh.get_imu_measurements()
 gnss_measurements  = dh.get_gnss_measurements()
+print(f"len gnss {len(gnss_measurements)}")
 gt_states  = dh.get_gt_states()
 gt_times = [state.time for state in gt_states]
 gns_times = [m.t for m in gnss_measurements]
@@ -19,12 +20,12 @@ imu_time = [m.get_time() for m in imu_measurements]
 
 gt_index = gt_times.index(imu_measurements[0].get_time())
 init_state = gt_states[gt_index]
-imu_var = np.asarray([1, 1, 1, 1, 1, 1]) * 5.0
+imu_var = np.asarray([1, 1, 1, 1, 1, 1]) * 3.0
 gnss_var = np.asarray([1, 1, 1]) * 0.001
+init_var = [*imu_var, *imu_var[3:]]
 
-filter = EsEkf(init_state, [0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
-print(filter)
-
+filter = EsEkf(init_state, init_var)
+print(len(gnss_measurements))
 outputs = []
 outs_gnss = []
 gnss_index = 0
@@ -32,15 +33,15 @@ for i in range(len(imu_measurements)):
     out = filter.run_step(imu_measurements[i], imu_var)
     imu_t = imu_measurements[i].get_time() 
 
-    for j in range(gnss_index, len(gnss_measurements)):
-        gns_t = gnss_measurements[j].t
-        # print("time diff: {}".format(gns_t - imu_t))
-        if abs(gns_t - imu_t) < 0.2 and (gns_t - imu_t) > 0.0:
-            out = filter.run_step(gnss_measurements[j], gnss_var)
-            outs_gnss.append(out)
-            gnss_index = j + 1
-            print("gnss_measurement index: {}\t\tdt: {}".format(gnss_index, gns_t - imu_t))
-            break
+    # for j in range(gnss_index, len(gnss_measurements)):
+    #     gns_t = gnss_measurements[j].t
+    #     # print(f"i {i}\tj{j}")
+    #     if imu_measurements[i].frame == gnss_measurements[j].frame:
+    #         out = filter.run_step(gnss_measurements[j], gnss_var)
+    #         outs_gnss.append(out)
+    #         gnss_index = j + 1
+    #         print("gnss_measurement index: {}\t\tdt: {}".format(gnss_index, gns_t - imu_t))
+    #         break
 
     outputs.append(out)
 

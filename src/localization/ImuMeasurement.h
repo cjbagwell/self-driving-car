@@ -26,12 +26,13 @@ private:
 public:
     arma::Col<double> accelerometer, gyro;
     double compas, time;
+    int frame;
 
     friend std::ostream& operator<<(std::ostream& out, const ImuMeasurement& m);
 
     double getTime(){return this->time;}
 
-    ImuMeasurement():accelerometer(3), compas(0), gyro(3), time(-1){};
+    ImuMeasurement():accelerometer(3), compas(0), gyro(3), time(-1), frame(-1){};
     
     /**
      * @brief Construct a new Imu Measurement object
@@ -40,16 +41,19 @@ public:
      * @param c compas measurement
      * @param g gyroscope measurement vector
      * @param t time the measurement occured at
+     * @param f frame the measurement occured during
      */
     ImuMeasurement(arma::Col<double> a, 
                    double c, 
                    arma::Col<double> g,
-                   double t)
+                   double t,
+                   int f)
                    :
                    accelerometer(a),
                    compas(c),
                    gyro(g),
-                   time(t)
+                   time(t),
+                   frame(f)
                    {};
     
     /**
@@ -63,12 +67,14 @@ public:
     ImuMeasurement(std::vector<double> a,
                    double c,
                    std::vector<double> g,
-                   double t)
+                   double t,
+                   int f)
                    :
                    accelerometer(a),
                    compas(c),
                    gyro(g),
-                   time(t)
+                   time(t),
+                   frame(f)
     {
         if(a.size() != 3){
             std::cout << "Accelerometer measurement must be of length 3" << std::endl;

@@ -61,14 +61,14 @@ class CarlaDataset(Dataset):
         lon_index   = labels.index('lon')
         alt_index   = labels.index('alt')
 
-        for i in range(1, len(labels)-1):
+        for i in range(1, len(lns)-1):
             elems = [elem for elem in lns[i].split(',')]
             self.gnss_raw["frames"  ].append(int(elems[frame_index]))
             self.gnss_raw["times"   ].append(float(elems[time_index]))
             self.gnss_raw["lats"    ].append(np.deg2rad(float(elems[lat_index])))
             self.gnss_raw["lons"    ].append(np.deg2rad(float(elems[lon_index])))
             self.gnss_raw["alts"    ].append(float(elems[alt_index]))
-
+        print(f"len gnss in dshandler {len(self.gnss_raw['frames'])}")
         # convert lat lons to positions
         gnsp = [latlon2position(lat, lon) for lat, lon in zip(self.gnss_raw["lats"], self.gnss_raw["lons"])]
         self.gnss_raw["xs"] = [x for x, y in gnsp]
@@ -276,7 +276,7 @@ class CarlaDataset(Dataset):
                                                        self.imu_raw['gyro_zs']):
             # TODO: implement frame in ImuMeasurement
             imu_measurements.append(loc.ImuMeasurement(
-                [ax, ay, az], c, [gx, gy, gz], t))
+                [ax, ay, az], c, [gx, gy, gz], t, frame))
 
         return imu_measurements
 
